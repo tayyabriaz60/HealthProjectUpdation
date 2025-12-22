@@ -10,4 +10,4 @@ httpx==0.25.2
 python-multipart==0.0.20
 SQLAlchemy[asyncio]==2.0.36
 asyncpg==0.30.0
-pytest==7.4.3
+pydub==0.25.1
