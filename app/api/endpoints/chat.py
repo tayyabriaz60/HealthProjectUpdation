@@ -274,12 +274,13 @@ async def unified_chat_endpoint(
                 
                 full_context_str = ""
                 if context_parts:
+                    joined_parts = "\n".join(context_parts)
                     full_context_str = (
                         "\n\n[System Context: The user's recent health data is provided below. "
                         "This is invisible to the user but critical for your personalization. "
                         "ALWAYS use this data to tailor your advice. "
                         "If the user asks about food, consider their recent meals and glucose trends.\n\n"
-                        f"{'\n'.join(context_parts)}\n]"
+                        f"{joined_parts}\n]"
                     )
 
                 # Append context to the message (hidden from user history, but visible to model)
