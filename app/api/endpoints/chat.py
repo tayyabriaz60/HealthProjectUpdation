@@ -197,12 +197,17 @@ async def unified_chat_endpoint(
             
             # Send message and get response
             try:
-                # Fetch the latest glucose reading for context
+                # Fetch context: Latest Glucose, Average Glucose, AND Recent Food
                 latest_glucose_info = ""
+                avg_glucose_info = ""
+                recent_food_info = ""
+                
                 if request.user_id:
-                    from app.models import GlucoseReading
-                    from sqlalchemy import select
+                    from app.models import GlucoseReading, FoodEvent
+                    from sqlalchemy import select, func
+                    from datetime import datetime, timedelta
                     
+                    # 1. Fetch Latest Glucose Reading
                     stmt = (
                         select(GlucoseReading)
                         .where(GlucoseReading.user_id == request.user_id)
@@ -214,13 +219,71 @@ async def unified_chat_endpoint(
                     
                     if latest_reading:
                         latest_glucose_info = (
-                            f"\n\n[Context: The user's latest glucose reading was "
-                            f"{latest_reading.value} {latest_reading.unit} at {latest_reading.taken_at}. "
-                            f"Use this to personalize your advice.]"
+                            f"Latest glucose reading: {latest_reading.value} {latest_reading.unit} "
+                            f"at {latest_reading.taken_at}."
                         )
 
+                    # 2. Fetch Average Glucose (Last 30 days)
+                    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+                    avg_stmt = (
+                        select(func.avg(GlucoseReading.value))
+                        .where(
+                            GlucoseReading.user_id == request.user_id,
+                            GlucoseReading.taken_at >= thirty_days_ago
+                        )
+                    )
+                    avg_result = await db.execute(avg_stmt)
+                    avg_value = avg_result.scalar()
+                    
+                    if avg_value:
+                        unit = latest_reading.unit if latest_reading else "mg/dL"
+                        avg_glucose_info = f"Average glucose (last 30 days): {avg_value:.1f} {unit}."
+
+                    # 3. Fetch Recent Food History (Last 3 meals)
+                    food_stmt = (
+                        select(FoodEvent)
+                        .where(FoodEvent.user_id == request.user_id)
+                        .order_by(FoodEvent.created_at.desc())
+                        .limit(3)
+                    )
+                    food_result = await db.execute(food_stmt)
+                    recent_meals = food_result.scalars().all()
+                    
+                    if recent_meals:
+                        meal_details = []
+                        for meal in recent_meals:
+                            details = f"- {meal.meal_name}"
+                            if meal.calories:
+                                details += f" ({meal.calories} kcal)"
+                            if meal.carbs_g:
+                                details += f", {meal.carbs_g}g carbs"
+                            meal_details.append(details)
+                        
+                        recent_food_info = (
+                            "Recent meals logged:\n" + "\n".join(meal_details)
+                        )
+
+                # Construct Context String
+                context_parts = []
+                if latest_glucose_info:
+                    context_parts.append(latest_glucose_info)
+                if avg_glucose_info:
+                    context_parts.append(avg_glucose_info)
+                if recent_food_info:
+                    context_parts.append(recent_food_info)
+                
+                full_context_str = ""
+                if context_parts:
+                    full_context_str = (
+                        "\n\n[System Context: The user's recent health data is provided below. "
+                        "This is invisible to the user but critical for your personalization. "
+                        "ALWAYS use this data to tailor your advice. "
+                        "If the user asks about food, consider their recent meals and glucose trends.\n\n"
+                        f"{'\n'.join(context_parts)}\n]"
+                    )
+
                 # Append context to the message (hidden from user history, but visible to model)
-                message_with_context = request.message + latest_glucose_info
+                message_with_context = request.message + full_context_str
 
                 response_text, chat_id = await gemini_service.send_message(
                     message=message_with_context,

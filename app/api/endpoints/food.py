@@ -87,11 +87,13 @@ async def ai_analyze_image(
         # Analyze with Gemini (auto-detect glucose vs food)
         gemini_service = get_gemini_service()
         
-        # Auto-fetch latest glucose reading if health_context is missing and user_id is provided
+        # Auto-fetch latest AND average glucose reading if health_context is missing and user_id is provided
         if not health_context and user_id:
-            from sqlalchemy import select
+            from sqlalchemy import select, func
             from app.models import GlucoseReading as GRModel
+            from datetime import datetime, timedelta
             
+            # 1. Latest Reading
             stmt = (
                 select(GRModel)
                 .where(GRModel.user_id == user_id)
@@ -101,8 +103,27 @@ async def ai_analyze_image(
             res = await db.execute(stmt)
             latest = res.scalar_one_or_none()
             
+            context_parts = []
             if latest:
-                health_context = f"Latest glucose reading: {latest.value} {latest.unit} at {latest.taken_at}"
+                context_parts.append(f"Latest glucose reading: {latest.value} {latest.unit} at {latest.taken_at}.")
+                
+                # 2. Average Reading (only if we have a latest reading to know the unit)
+                thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+                avg_stmt = (
+                    select(func.avg(GRModel.value))
+                    .where(
+                        GRModel.user_id == user_id,
+                        GRModel.taken_at >= thirty_days_ago
+                    )
+                )
+                avg_res = await db.execute(avg_stmt)
+                avg_val = avg_res.scalar()
+                
+                if avg_val:
+                    context_parts.append(f"Average glucose (last 30 days): {avg_val:.1f} {latest.unit}.")
+            
+            if context_parts:
+                health_context = " ".join(context_parts)
 
         result = gemini_service.analyze_image_auto(
             image_data=data,
