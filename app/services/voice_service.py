@@ -29,17 +29,58 @@ class VoiceService:
     async def convert_to_pcm16_mono_16k(self, file_bytes: bytes) -> bytes:
         """
         Convert arbitrary audio to 16-bit PCM mono 16kHz.
+        Prioritizes native wave module for WAV files to avoid ffmpeg dependency.
         """
-        # Let pydub detect the format automatically
-        audio = AudioSegment.from_file(io.BytesIO(file_bytes))
+        import wave
+        import audioop
 
-        # Convert to mono 16kHz 16-bit PCM
-        audio = audio.set_channels(1).set_frame_rate(16000).set_sample_width(2)
+        # Try processing as native WAV first (no ffmpeg needed)
+        try:
+            with io.BytesIO(file_bytes) as wav_io:
+                with wave.open(wav_io, 'rb') as wav:
+                    # Get current properties
+                    n_channels = wav.getnchannels()
+                    sampwidth = wav.getsampwidth()
+                    framerate = wav.getframerate()
+                    frames = wav.readframes(wav.getnframes())
 
-        out_buffer = io.BytesIO()
-        # Export as raw PCM data
-        audio.export(out_buffer, format="s16le")
-        return out_buffer.getvalue()
+                    # 1. Convert to Mono if needed
+                    if n_channels > 1:
+                        frames = audioop.tomono(frames, sampwidth, 1, 0)
+                        n_channels = 1
+
+                    # 2. Resample to 16kHz if needed
+                    if framerate != 16000:
+                        frames, _ = audioop.ratecv(frames, sampwidth, 1, framerate, 16000, None)
+                        framerate = 16000
+
+                    # 3. Convert to 16-bit (2 bytes) if needed
+                    if sampwidth != 2:
+                        frames = audioop.lin2lin(frames, sampwidth, 2)
+                        sampwidth = 2
+                    
+                    return frames
+        except (wave.Error, EOFError):
+            # Not a valid WAV file or wave module failed, fall back to pydub
+            pass
+        except Exception as e:
+            print(f"Native WAV conversion failed: {e}, falling back to pydub")
+            pass
+
+        # Fallback to pydub (requires ffmpeg for non-WAV or complex conversions)
+        try:
+            audio = AudioSegment.from_file(io.BytesIO(file_bytes))
+            
+            # Convert to mono 16kHz 16-bit PCM
+            audio = audio.set_channels(1).set_frame_rate(16000).set_sample_width(2)
+            
+            out_buffer = io.BytesIO()
+            audio.export(out_buffer, format="s16le")
+            return out_buffer.getvalue()
+        except Exception as e:
+             if "ffmpeg" in str(e).lower() or "ffprobe" in str(e).lower():
+                 raise RuntimeError("FFmpeg is missing. Please ensure the audio is sent as a standard WAV file (PCM) from the client.") from e
+             raise e
 
     async def call_gemini_live_with_audio(self, pcm_data: bytes) -> Tuple[bytes, List[str]]:
         """
