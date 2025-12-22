@@ -197,8 +197,33 @@ async def unified_chat_endpoint(
             
             # Send message and get response
             try:
+                # Fetch the latest glucose reading for context
+                latest_glucose_info = ""
+                if request.user_id:
+                    from app.models import GlucoseReading
+                    from sqlalchemy import select
+                    
+                    stmt = (
+                        select(GlucoseReading)
+                        .where(GlucoseReading.user_id == request.user_id)
+                        .order_by(GlucoseReading.taken_at.desc())
+                        .limit(1)
+                    )
+                    result = await db.execute(stmt)
+                    latest_reading = result.scalar_one_or_none()
+                    
+                    if latest_reading:
+                        latest_glucose_info = (
+                            f"\n\n[Context: The user's latest glucose reading was "
+                            f"{latest_reading.value} {latest_reading.unit} at {latest_reading.taken_at}. "
+                            f"Use this to personalize your advice.]"
+                        )
+
+                # Append context to the message (hidden from user history, but visible to model)
+                message_with_context = request.message + latest_glucose_info
+
                 response_text, chat_id = await gemini_service.send_message(
-                    message=request.message,
+                    message=message_with_context,
                     chat_id=request.chat_id
                 )
             except Exception as e:

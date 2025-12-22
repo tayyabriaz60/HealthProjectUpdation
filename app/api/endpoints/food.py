@@ -86,6 +86,24 @@ async def ai_analyze_image(
 
         # Analyze with Gemini (auto-detect glucose vs food)
         gemini_service = get_gemini_service()
+        
+        # Auto-fetch latest glucose reading if health_context is missing and user_id is provided
+        if not health_context and user_id:
+            from sqlalchemy import select
+            from app.models import GlucoseReading as GRModel
+            
+            stmt = (
+                select(GRModel)
+                .where(GRModel.user_id == user_id)
+                .order_by(GRModel.taken_at.desc())
+                .limit(1)
+            )
+            res = await db.execute(stmt)
+            latest = res.scalar_one_or_none()
+            
+            if latest:
+                health_context = f"Latest glucose reading: {latest.value} {latest.unit} at {latest.taken_at}"
+
         result = gemini_service.analyze_image_auto(
             image_data=data,
             mime_type=content_type,
