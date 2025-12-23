@@ -110,13 +110,25 @@ class VoiceService:
         ) as session:
             try:
                 # Create Blob with proper MIME type
-                audio_blob = types.Blob(data=pcm_data, mime_type="audio/pcm;rate=16000")
+                # The SDK expects 'mime_type' and 'data' directly in the content part for real-time input
+                # or uses specific methods depending on the SDK version.
+                # For google-genai 0.2+, the pattern for audio input in live sessions is using session.send()
                 
-                # Send audio data
-                await session.send_realtime_input(audio=audio_blob)
-                
-                # Signal that audio input stream is complete
-                await session.send_realtime_input(audio_stream_end=True)
+                # Send audio data using 'send' with the correct input structure
+                # We send it as a Content object containing the audio blob
+                await session.send(
+                    input=types.Content(
+                        parts=[
+                            types.Part(
+                                inline_data=types.Blob(
+                                    mime_type="audio/pcm;rate=16000",
+                                    data=pcm_data
+                                )
+                            )
+                        ]
+                    ),
+                    end_of_turn=True  # Signal that this is the complete user input
+                )
                 
             except Exception as send_err:
                 raise RuntimeError(f"Failed to send audio to Gemini Live API: {str(send_err)}") from send_err
