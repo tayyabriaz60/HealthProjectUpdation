@@ -93,7 +93,7 @@ class VoiceService:
 
         # Create proper Content object for system_instruction
         system_instruction_content = types.Content(
-            parts=[types.Part(text="You are a helpful and friendly diabetes health assistant. Always respond with audio, never text-only. Keep your responses concise and supportive.")]
+            parts=[types.Part(text="You are a helpful and friendly diabetes health assistant. Always respond with audio, never text-only. Keep your responses concise and supportive. If the user speaks in a language other than English, detect the language and respond in that same language.")]
         )
 
         config = types.LiveConnectConfig(
