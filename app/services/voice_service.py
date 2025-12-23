@@ -114,19 +114,9 @@ class VoiceService:
                 # or uses specific methods depending on the SDK version.
                 # For google-genai 0.2+, the pattern for audio input in live sessions is using session.send()
                 
-                # Send audio data using 'send' with the correct input structure
-                # We send it as a Content object containing the audio blob
+                # Send audio data using 'send' with a dictionary structure which is safer
                 await session.send(
-                    input=types.Content(
-                        parts=[
-                            types.Part(
-                                inline_data=types.Blob(
-                                    mime_type="audio/pcm;rate=16000",
-                                    data=pcm_data
-                                )
-                            )
-                        ]
-                    ),
+                    input={"role": "user", "parts": [{"inline_data": {"mime_type": "audio/pcm;rate=16000", "data": pcm_data}}]},
                     end_of_turn=True  # Signal that this is the complete user input
                 )
                 
