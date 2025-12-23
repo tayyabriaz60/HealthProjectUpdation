@@ -91,9 +91,14 @@ class VoiceService:
         if not pcm_data or len(pcm_data) < 1000:  # At least ~30ms of audio at 16kHz
             raise ValueError(f"Audio data too short: {len(pcm_data)} bytes. Please record at least 1 second of audio.")
 
+        # Create proper Content object for system_instruction
+        system_instruction_content = types.Content(
+            parts=[types.Part(text="You are a helpful and friendly diabetes health assistant. Always respond with audio, never text-only. Keep your responses concise and supportive.")]
+        )
+
         config = types.LiveConnectConfig(
             response_modalities=["AUDIO"],  # Explicitly request AUDIO only
-            system_instruction="You are a helpful and friendly diabetes health assistant. Always respond with audio, never text-only. Keep your responses concise and supportive.",
+            system_instruction=system_instruction_content,
         )
 
         response_audio_chunks: List[bytes] = []
