@@ -532,4 +532,8 @@ class GeminiService:
                 "raw_response": meal.get("raw_response")
             }
 
-        raise ValueError("Could not determine if image is glucose meter or food. Please upload a clear image.")
+        # Instead of error, return a friendly object for frontend to display
+        return {
+            "type": "unknown",
+            "message": "I'm not sure what this is. I can help analyze your glucose meter readings or food photos. Could you try uploading one of those?"
+        }
