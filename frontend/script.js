@@ -29,25 +29,116 @@ function updateChatId(chatId) {
     }
 }
 
+// Voice Recording Logic
+let mediaRecorder;
+let audioChunks = [];
+
+// Robust URL Constructor
+function getApiUrls() {
+    let rawInput = document.getElementById('apiUrl').value.trim();
+    rawInput = rawInput.replace(/\/+$/, '');
+    
+    let baseUrl;
+    if (rawInput.endsWith('/api/chat')) {
+        baseUrl = rawInput.substring(0, rawInput.length - '/api/chat'.length);
+    } else if (rawInput.endsWith('/api')) {
+        baseUrl = rawInput.substring(0, rawInput.length - '/api'.length);
+    } else {
+        baseUrl = rawInput;
+    }
+    baseUrl = baseUrl.replace(/\/+$/, '');
+
+    return {
+        chat: `${baseUrl}/api/chat`,
+        voice: `${baseUrl}/api/voice/chat`,
+        image: `${baseUrl}/api/ai/analyze-image`
+    };
+}
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            await sendVoiceToBackend(audioBlob);
+        };
+
+        mediaRecorder.start();
+        document.getElementById('voiceStatus').textContent = "🔴 Recording... Release to send.";
+    } catch (err) {
+        console.error("Error accessing microphone:", err);
+        alert("Could not access microphone. Please allow permissions.");
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+        document.getElementById('voiceStatus').textContent = "✅ Processing...";
+    }
+}
+
+async function sendVoiceToBackend(audioBlob) {
+    const formData = new FormData();
+    formData.append("file", audioBlob, "voice_query.wav");
+
+    const urls = getApiUrls();
+    console.log("Sending voice to:", urls.voice);
+    
+    try {
+        const response = await fetch(urls.voice, {
+            method: "POST",
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server Error: ${errorText}`);
+        }
+
+        const responseBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(responseBlob);
+        
+        const audio = new Audio(audioUrl);
+        audio.play();
+        
+        addMessage('system', '🎤 Voice response received and playing...');
+        document.getElementById('voiceStatus').textContent = "";
+
+    } catch (error) {
+        console.error("Voice upload failed", error);
+        addMessage('system', `❌ Voice Error: ${error.message}`, true);
+        document.getElementById('voiceStatus').textContent = "❌ Error";
+    }
+}
+
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
     
+    // Check if message is empty
     if (!message) {
-        alert('Please enter a message!');
+        // Only show alert if it was a manual send button click, not voice
+        // But for sendMessage, we expect text.
+        // Let's make it more robust: don't alert, just return if empty (common UX)
+        // Or check if it's the Enter key which might trigger empty sends
         return;
     }
     
-    const apiUrl = document.getElementById('apiUrl').value;
-    const streamMode = document.getElementById('streamMode').checked;
-    const includeHistory = document.getElementById('includeHistory').checked;
+    const urls = getApiUrls();
+    const userId = document.getElementById('userId').value;
     const chatIdInput = document.getElementById('chatId').value.trim();
     
-    // Add user message to chat
     addMessage('user', message);
     messageInput.value = '';
     
-    // Disable send button
     const sendBtn = document.getElementById('sendBtn');
     sendBtn.disabled = true;
     sendBtn.textContent = 'Sending...';
@@ -55,26 +146,144 @@ async function sendMessage() {
     try {
         const requestBody = {
             message: message,
-            chat_id: chatIdInput || currentChatId || null
+            chat_id: chatIdInput || currentChatId || null,
+            user_id: userId
         };
         
-        if (streamMode) {
-            await handleStreaming(apiUrl, requestBody, includeHistory);
-        } else {
-            await handleNormal(apiUrl, requestBody, includeHistory);
+        const fetchUrl = new URL(urls.chat);
+        if (document.getElementById('includeHistory').checked) {
+            fetchUrl.searchParams.append('include_history', 'true');
         }
+
+        const res = await fetch(fetchUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            let errorJson;
+            try { errorJson = JSON.parse(errorText); } catch(e) {}
+            throw new Error(errorJson?.detail?.error || errorJson?.detail || errorText);
+        }
+
+        const data = await res.json();
+        if (data.chat_id) updateChatId(data.chat_id);
+        addMessage('model', data.response);
+
     } catch (error) {
         let errorMsg = error.message;
-        if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-            errorMsg = 'Cannot connect to server. Please check:\n1. Backend server is running\n2. API URL is correct\n3. CORS is enabled';
+        if (errorMsg.includes('Failed to fetch')) {
+            errorMsg = 'Cannot connect to server. Ensure backend is running.';
         }
         addMessage('system', `Error: ${errorMsg}`, true);
-        console.error('Error:', error);
+        console.error('Chat Error:', error);
     } finally {
         sendBtn.disabled = false;
         sendBtn.textContent = 'Send';
     }
 }
+
+async function handleSmartImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const resultDiv = document.getElementById('smartResult');
+    const healthContext = document.getElementById('smartHealthContextInput').value.trim();
+    const userId = document.getElementById('userId').value;
+    const urls = getApiUrls();
+    
+    console.log("Sending image to:", urls.image);
+
+    resultDiv.className = 'smart-result loading show';
+    resultDiv.innerHTML = '<p>🔄 Analyzing image...</p>';
+    
+    try {
+        const smartUrl = new URL(urls.image);
+        
+        if (healthContext) smartUrl.searchParams.append('health_context', healthContext);
+        if (userId) smartUrl.searchParams.append('user_id', userId);
+        if (currentChatId) smartUrl.searchParams.append('chat_id', currentChatId);
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch(smartUrl, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to analyze image');
+        }
+        
+        const data = await response.json();
+        resultDiv.className = 'smart-result show';
+        
+        if (data.chat_id) updateChatId(data.chat_id);
+
+        if (data.type === 'glucose') {
+            resultDiv.innerHTML = `
+                <h4>🩺 Glucose Meter</h4>
+                <strong>Reading:</strong> ${data.reading.value} ${data.reading.unit}<br>
+                <em>${data.analysis || ''}</em>
+            `;
+        } else if (data.type === 'food') {
+            resultDiv.innerHTML = `
+                <h4>🍽️ Food Analysis</h4>
+                <strong>Meal:</strong> ${data.meal.meal_name}<br>
+                <strong>Calories:</strong> ${data.meal.calories || 'N/A'}<br>
+                <em>${data.recommendation || ''}</em>
+            `;
+        } else {
+            resultDiv.innerHTML = `<p>Could not identify image.</p>`;
+        }
+        
+    } catch (error) {
+        resultDiv.className = 'smart-result error show';
+        resultDiv.innerHTML = `<h4>❌ Error</h4><p>${error.message}</p>`;
+        console.error('Image upload error:', error);
+    }
+}
+
+// Helpers
+function addMessage(role, text, isError = false) {
+    const messagesDiv = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role} ${isError ? 'error' : ''}`;
+    messageDiv.innerHTML = `<strong>${role === 'user' ? 'You' : role === 'model' ? 'AI' : 'System'}:</strong> ${text}`;
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function updateChatId(chatId) {
+    if (chatId) {
+        currentChatId = chatId;
+        document.getElementById('chatId').value = chatId;
+        localStorage.setItem('chatId', chatId);
+    }
+}
+
+function clearChat() {
+    document.getElementById('chatMessages').innerHTML = '<div class="message system">Chat cleared.</div>';
+    currentChatId = null;
+    localStorage.removeItem('chatId');
+}
+
+function testConnection() {
+    alert("Check browser console for connection logs.");
+}
+
+// Load saved settings
+window.addEventListener('DOMContentLoaded', () => {
+    const savedChatId = localStorage.getItem('chatId');
+    if (savedChatId) {
+        currentChatId = savedChatId;
+        document.getElementById('chatId').value = savedChatId;
+    }
+});
 
 async function handleNormal(apiUrl, requestBody, includeHistory) {
     try {

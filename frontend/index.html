@@ -5,107 +5,305 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot API Tester</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Modern, Professional Styling */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+
+        /* Config Section */
+        .config-section {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .config-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .config-section input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .config-section button {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        /* Chat Section */
+        .chat-section {
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #fff;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 80%;
+            line-height: 1.4;
+            font-size: 0.95rem;
+        }
+
+        .message.user {
+            background-color: var(--primary-color);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.model {
+            background-color: #f1f3f5;
+            color: var(--text-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .message.system {
+            background-color: #fff3cd;
+            color: #856404;
+            font-size: 0.85rem;
+            text-align: center;
+            margin: 10px auto;
+            width: 90%;
+        }
+
+        /* Input Area */
+        .input-section {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #sendBtn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        #voiceBtn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        #voiceBtn:active {
+            background-color: #c82333;
+            transform: scale(0.98);
+        }
+
+        /* Smart Upload */
+        .smart-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            border: 1px dashed #ced4da;
+            text-align: center;
+        }
+
+        .smart-section h3 {
+            margin-top: 0;
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+
+        .upload-btn {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        #smartResult {
+            margin-top: 15px;
+            text-align: left;
+            font-size: 0.9rem;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            display: none;
+        }
+
+        #smartResult.show {
+            display: block;
+        }
+
+        /* Info Section */
+        .info-section {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+            padding-top: 15px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>🤖 Chatbot API Tester</h1>
+        <h1>🤖 Health Assistant</h1>
         
         <div class="config-section">
-            <label>
-                <strong>API URL:</strong>
-                <input type="text" id="apiUrl" value="http://localhost:8000/api/chat" placeholder="API URL">
-            </label>
-            <button id="testBtn" onclick="testConnection()" style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Test Connection</button>
-            <label>
-                <input type="checkbox" id="streamMode"> Enable Streaming
-            </label>
-            <label>
-                <input type="checkbox" id="includeHistory" checked> Include History
-            </label>
+            <details>
+                <summary>⚙️ Configuration (Click to Expand)</summary>
+                <div style="margin-top: 10px;">
+                    <label>
+                        API URL:
+                        <input type="text" id="apiUrl" value="http://127.0.0.1:8000/api/chat" placeholder="API URL">
+                    </label>
+                    <label>
+                        User ID:
+                        <input type="text" id="userId" value="test_user_123" placeholder="User ID (Firebase UID)">
+                    </label>
+                    <button id="testBtn" onclick="testConnection()" style="background: var(--success-color); color: white;">Test Connection</button>
+                    <div style="margin-top: 10px; display: flex; gap: 15px;">
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" id="streamMode"> Stream
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" id="includeHistory" checked style="margin-right: 5px;"> History
+                        </label>
+                    </div>
+                </div>
+            </details>
         </div>
 
         <div class="chat-section">
             <div class="chat-messages" id="chatMessages">
                 <div class="message system">
-                    <strong>System:</strong> Chat started. Send a message to begin!
+                    <strong>System:</strong> Welcome! I am your AI Health Assistant.
                 </div>
             </div>
             
             <div class="input-section">
-                <input type="text" id="chatId" placeholder="Chat ID (optional - leave empty for new chat)" />
+                <!-- Hidden Chat ID -->
+                <input type="hidden" id="chatId" />
+                
                 <div class="input-group">
-                    <input type="text" id="messageInput" placeholder="Type your message..." />
+                    <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)"/>
+                    <button id="voiceBtn" onmousedown="startRecording()" onmouseup="stopRecording()" ontouchstart="startRecording()" ontouchend="stopRecording()">🎤</button>
                     <button id="sendBtn" onclick="sendMessage()">Send</button>
                 </div>
-                <button id="clearBtn" onclick="clearChat()">Clear Chat</button>
-            </div>
-        </div>
-
-        <div class="glucose-section">
-            <h3>🩺 Glucose Meter Analysis</h3>
-            <div class="upload-area">
-                <input type="file" id="glucoseImageInput" accept="image/*" style="display: none;" onchange="handleGlucoseImageSelect(event)">
-                <button id="uploadBtn" onclick="document.getElementById('glucoseImageInput').click()" class="upload-button">
-                    📷 Upload Glucose Meter Image
-                </button>
-                <div id="glucoseImagePreview" class="image-preview" style="display: none;">
-                    <img id="glucosePreviewImg" src="" alt="Preview">
-                    <button onclick="clearGlucoseImagePreview()" class="remove-btn">✕ Remove</button>
+                <div id="voiceStatus" style="text-align: center; font-size: 0.8rem; height: 1.2em; color: var(--secondary-color);"></div>
+                
+                <div style="text-align: right; margin-top: 5px;">
+                    <button onclick="clearChat()" style="background: none; color: #dc3545; font-size: 0.8rem; padding: 5px;">Clear Chat</button>
                 </div>
-                <div id="glucoseResult" class="glucose-result"></div>
-            </div>
-        </div>
-
-        <div class="food-section">
-            <h3>🍽️ Food Analysis</h3>
-            <div class="upload-area">
-                <input type="file" id="foodImageInput" accept="image/*" style="display: none;" onchange="handleFoodImageSelect(event)">
-                <button id="foodUploadBtn" onclick="document.getElementById('foodImageInput').click()" class="upload-button food-button">
-                    📷 Upload Food Image
-                </button>
-                <div class="health-context-input" style="margin-top: 10px;">
-                    <input type="text" id="healthContextInput" placeholder="Optional: Latest glucose reading (e.g., 125 mg/dL)" 
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
-                </div>
-                <div id="foodImagePreview" class="image-preview" style="display: none;">
-                    <img id="foodPreviewImg" src="" alt="Preview">
-                    <button onclick="clearFoodImagePreview()" class="remove-btn">✕ Remove</button>
-                </div>
-                <div id="foodResult" class="food-result"></div>
             </div>
         </div>
 
         <div class="smart-section">
-            <h3>🤖 Smart Image Analysis (Auto-detect)</h3>
-            <div class="upload-area">
-                <input type="file" id="smartImageInput" accept="image/*" style="display: none;" onchange="handleSmartImageSelect(event)">
-                <button id="smartUploadBtn" onclick="document.getElementById('smartImageInput').click()" class="upload-button smart-button">
-                    📷 Upload Any Image
-                </button>
-                <div class="health-context-input" style="margin-top: 10px;">
-                    <input type="text" id="smartHealthContextInput" placeholder="Optional: Latest glucose reading (for food analysis)" 
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
-                </div>
-                <div id="smartImagePreview" class="image-preview" style="display: none;">
-                    <img id="smartPreviewImg" src="" alt="Preview">
-                    <button onclick="clearSmartImagePreview()" class="remove-btn">✕ Remove</button>
-                </div>
-                <div id="smartResult" class="smart-result"></div>
+            <h3>📷 Smart Analysis</h3>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Upload a photo of your glucose meter or food.</p>
+            
+            <input type="file" id="smartImageInput" accept="image/*" style="display: none;" onchange="handleSmartImageSelect(event)">
+            
+            <div class="input-group" style="margin-bottom: 10px;">
+                <input type="text" id="smartHealthContextInput" placeholder="Optional context (e.g., 'Feeling dizzy')" 
+                       style="padding: 8px; border: 1px solid #ced4da; border-radius: 4px; width: 100%;">
             </div>
+
+            <!-- Fixed Upload Button Style -->
+            <button id="smartUploadBtn" onclick="document.getElementById('smartImageInput').click()" 
+                    style="background-color: #6c757d; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; border: none; width: 100%;">
+                📤 Upload Image
+            </button>
+            
+            <div id="smartResult" class="smart-result"></div>
         </div>
 
         <div class="info-section">
-            <h3>📋 API Info</h3>
-            <p><strong>Chat Endpoint:</strong> POST /api/chat</p>
-            <p><strong>Glucose Endpoint:</strong> POST /api/ai/analyze-glucose</p>
-            <p><strong>Food Endpoint:</strong> POST /api/ai/analyze-food</p>
-            <p><strong>Smart Endpoint:</strong> POST /api/ai/analyze-image</p>
-            <p><strong>Normal Mode:</strong> Complete response + history</p>
-            <p><strong>Streaming Mode:</strong> Real-time chunks + history at end</p>
+            <p><strong>Features Active:</strong> Voice (Native WAV), Smart Context (Glucose/Food History), Multilingual.</p>
         </div>
     </div>
 
     <script src="script.js"></script>
+    <script>
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+    </script>
 </body>
 </html>
 
