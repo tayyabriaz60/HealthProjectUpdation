@@ -486,7 +486,7 @@ class GeminiService:
             "Classify this image as exactly one of: GLUCOSE or FOOD.\n"
             "- If it is a glucose meter display with a numeric reading, answer: GLUCOSE\n"
             "- If it is a food/meal, answer: FOOD\n"
-            "- If unclear, answer: UNKNOWN\n"
+            "- If it is ANYTHING ELSE (e.g. selfie, landscape, computer screen, code, blurry, unclear), answer: UNKNOWN\n"
             "Reply with a single word only."
         )
 
@@ -499,8 +499,15 @@ class GeminiService:
         classification = "unknown"
         if "GLUCOSE" in classify_text:
             classification = "glucose"
-        elif "FOOD" in classify_text:
+        elif "FOOD" in classify_text and "UNKNOWN" not in classify_text:
             classification = "food"
+        
+        if classification == "unknown":
+            return {
+                "success": False,
+                "type": "unknown", 
+                "message": "Please upload a glucose meter or food image only."
+            }
 
         if classification == "glucose":
             reading = self.analyze_glucose_image(
