@@ -256,7 +256,8 @@ async def ai_analyze_image(
         # The issue might be if the "text" field of the user message is empty.
         
         # Let's enrich the user message text slightly to help the AI know an image was sent
-        user_message.text = f"[Image uploaded: {context_description}]" 
+        # Separated from memory summary to avoid cluttered UI in history
+        user_message.text = "[Image Uploaded]" 
 
         db.add_all([user_message, assistant_message])
         await db.flush()
