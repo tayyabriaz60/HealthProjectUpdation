@@ -39,23 +39,13 @@ async def unified_chat_endpoint(
     include_history: bool = Query(True, description="Include full conversation history in response (default: true)")
 ):
     """
-    🚀 UNIFIED CHAT ENDPOINT - Everything in one place!
-    
-    Single endpoint for Flutter/mobile apps that handles:
-    - ✅ Normal chat (complete response + history)
-    - ✅ Streaming chat (real-time chunks + history at end)
-    - ✅ Conversation history (always included in both modes)
-    - ✅ Auto session creation
-    - ✅ Multi-turn conversations
-    
-    Usage:
-    - Normal: POST /api/chat
-    - Streaming: POST /api/chat?stream=true
-    
-    Features:
-    - First message: Creates new session automatically
-    - Subsequent messages: Pass chat_id to continue conversation
-    - History ALWAYS included in both normal and streaming modes!
+    Unified chat endpoint for mobile apps.
+
+    Supports:
+    - Normal responses with optional history
+    - Streaming responses with history at the end
+    - Automatic session creation
+    - Multi-turn conversations
     """
     
     greeting_text = (
@@ -197,8 +187,68 @@ async def unified_chat_endpoint(
             
             # Send message and get response
             try:
+                gemini_service = get_gemini_service()
+
+                # Ensure session exists and is restored if needed
+                if request.chat_id:
+                     from sqlalchemy import select
+                     from app.models import Message as MsgModel
+                     stmt = select(MsgModel).where(MsgModel.chat_session_id == request.chat_id).order_by(MsgModel.created_at.asc())
+                     res = await db.execute(stmt)
+                     db_messages = res.scalars().all()
+                     if db_messages:
+                         await gemini_service.restore_session_from_db(request.chat_id, db_messages)
+
                 # Fetch context: Latest Glucose, Average Glucose, AND Recent Food
                 latest_glucose_info = ""
+                avg_glucose_info = ""
+                recent_food_info = ""
+                
+                # Import models locally to avoid circular imports, but ensure they are available for the entire scope
+                from app.models import GlucoseReading, FoodEvent
+                from sqlalchemy import select, func
+                from datetime import datetime, timedelta
+                
+                # IMPORTANT: Initialize uuid if not already imported at top level, 
+                # though it should be. Added here to be safe within function scope if needed
+                import uuid 
+
+                # 1. EXTRACT MANUAL DATA (Glucose/Food) from user message
+                extracted_data = gemini_service.extract_health_data_from_text(request.message)
+                
+                # We can't attach state to the Pydantic model 'request' directly.
+                # Instead, we'll use local variables to hold the pending DB objects.
+                glucose_to_save = None
+                food_to_save = None
+                
+                # Check for existing chat_id before using it for new objects
+                # If chat_id is None, we'll assign the real one after creating session
+                current_chat_id = request.chat_id or str(uuid.uuid4()) 
+
+                if extracted_data.get("type") == "glucose":
+                    data = extracted_data.get("data", {})
+                    if data.get("value") and data.get("unit"):
+                        glucose_to_save = GlucoseReading(
+                            user_id=request.user_id,
+                            chat_session_id=current_chat_id, # Use a valid ID
+                            value=float(data["value"]),
+                            unit=data["unit"],
+                            taken_at=datetime.utcnow()
+                        )
+
+                elif extracted_data.get("type") == "food":
+                    data = extracted_data.get("data", {})
+                    if data.get("meal_name"):
+                         food_to_save = FoodEvent(
+                            user_id=request.user_id,
+                            chat_session_id=current_chat_id, # Use a valid ID
+                            meal_name=data["meal_name"],
+                            calories=data.get("calories"),
+                            carbs_g=data.get("carbs_g"),
+                            created_at=datetime.utcnow()
+                        )
+                
+                # Fetch context: Latest Glucose, Average Glucose, AND Recent Food
                 avg_glucose_info = ""
                 recent_food_info = ""
                 
@@ -306,14 +356,26 @@ async def unified_chat_endpoint(
                 elif request.user_id and not session.user_id:
                     # Update user_id if provided and session doesn't have one yet
                     session.user_id = request.user_id
-
+                
                 # Persist this turn (user + assistant)
-                db.add_all(
-                    [
-                        Message(chat_session_id=chat_id, role="user", text=request.message),
-                        Message(chat_session_id=chat_id, role="assistant", text=response_text),
-                    ]
-                )
+                user_msg_obj = Message(chat_session_id=chat_id, role="user", text=request.message)
+                asst_msg_obj = Message(chat_session_id=chat_id, role="assistant", text=response_text)
+                
+                db.add_all([user_msg_obj, asst_msg_obj])
+                await db.flush() # Flush to get IDs
+
+                # SAVE EXTRACTED DATA (Linked to the Assistant Message)
+                if glucose_to_save:
+                    glucose_to_save.message_id = asst_msg_obj.id # Link to assistant response
+                    # Ensure session ID is set if it wasn't before
+                    glucose_to_save.chat_session_id = chat_id
+                    db.add(glucose_to_save)
+                
+                if food_to_save:
+                    food_to_save.message_id = asst_msg_obj.id
+                    food_to_save.chat_session_id = chat_id
+                    db.add(food_to_save)
+
                 await db.commit()
 
             # Build response
@@ -332,6 +394,7 @@ async def unified_chat_endpoint(
                             history = [
                                 MessageHistory(role=str(msg.get("role", "unknown")), text=str(msg.get("text", "")))
                                 for msg in history_data
+                                if "[IMAGE_MEMORY]" not in str(msg.get("text", "")) and "IMAGE_ANALYSIS_CONTEXT" not in str(msg.get("text", ""))
                             ]
                             response_data["history"] = history
                         except Exception as e:
@@ -362,7 +425,7 @@ async def unified_chat_endpoint(
             
             # Default values
             status_code = 500
-            user_message = "We’re having trouble processing your request right now. Please try again in a moment."
+            user_message = "We're having trouble processing your request right now. Please try again in a moment."
             error_code = "CHAT_PROCESSING_ERROR"
 
             lower_msg = raw_error_message.lower()
@@ -375,7 +438,7 @@ async def unified_chat_endpoint(
             elif "rate limit" in lower_msg or "429" in lower_msg:
                 status_code = 429
                 error_code = "RATE_LIMITED"
-                user_message = "You’ve reached the current request limit. Please wait a bit and try again."
+                user_message = "You've reached the current request limit. Please wait a bit and try again."
             elif "401" in lower_msg or "unauthenticated" in lower_msg or "invalid api key" in lower_msg:
                 status_code = 401
                 error_code = "AUTHENTICATION_ERROR"
@@ -490,6 +553,7 @@ async def get_chat_history(
     history = [
         MessageHistory(role=msg.role, text=msg.text, image_path=msg.image_path)
         for msg in messages
+        if "[IMAGE_MEMORY]" not in msg.text and "IMAGE_ANALYSIS_CONTEXT" not in msg.text
     ]
     
     return {

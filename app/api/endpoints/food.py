@@ -5,6 +5,7 @@ import mimetypes
 import uuid
 from pathlib import Path
 from typing import Optional
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -124,6 +125,7 @@ async def ai_analyze_image(
             
             if context_parts:
                 health_context = " ".join(context_parts)
+                print(f"DEBUG: Health Context for Food Analysis: {health_context}") # Debug logging
 
         result = gemini_service.analyze_image_auto(
             image_data=data,
@@ -135,7 +137,21 @@ async def ai_analyze_image(
         session = await _get_or_create_session(db, chat_id, user_id)
         chat_id = session.id
 
+        # Restore Gemini session memory from DB history to ensure continuity
+        from sqlalchemy import select
+        from app.models import Message as MsgModel
+        stmt = select(MsgModel).where(MsgModel.chat_session_id == chat_id).order_by(MsgModel.created_at.asc())
+        res = await db.execute(stmt)
+        db_messages = res.scalars().all()
+        if db_messages:
+            await gemini_service.restore_session_from_db(chat_id, db_messages)
+
         assistant_text = ""
+        context_description = "" # For AI memory
+        
+        # New Generic Memory Summary
+        memory_summary = result.get("memory_summary") or "No summary available."
+
         if result.get("type") == "glucose":
             reading = result.get("reading") or {}
             value = reading.get("value")
@@ -147,10 +163,17 @@ async def ai_analyze_image(
                 f"Analysis: {analysis}" if analysis else None,
             ]
             assistant_text = "\n".join([p for p in parts if p])
+            # Ensure markdown is stripped from the combined text as well
+            if _gemini_service_instance:
+                assistant_text = _gemini_service_instance._clean_response_text(assistant_text)
+            
+            context_description = memory_summary # Use standard summary
+
         elif result.get("type") == "food":
             meal = result.get("meal") or {}
             name = meal.get("meal_name") or "Unidentified Meal"
             calories = meal.get("calories")
+            # ...
             rec = result.get("recommendation") or ""
             parts = [
                 "Detected: Food",
@@ -159,21 +182,82 @@ async def ai_analyze_image(
                 f"Recommendation: {rec}" if rec else None,
             ]
             assistant_text = "\n".join([p for p in parts if p])
+            # Ensure markdown is stripped from the combined text as well
+            if _gemini_service_instance:
+                assistant_text = _gemini_service_instance._clean_response_text(assistant_text)
+                
+            context_description = memory_summary # Use standard summary
+
+        elif result.get("type") == "general":
+             # Handle new General type
+             assistant_text = result.get("description") or "I analyzed the image."
+             context_description = memory_summary
+
+        elif result.get("type") == "unknown":
+            # Pass the friendly error message directly
+            assistant_text = result.get("message") or "Could not analyze this image. Please upload a food image or glucose meter."
+            # Do NOT save a valid memory context for rejected images, so follow-up questions won't use it.
+            context_description = "The user uploaded an invalid image which was rejected."
         else:
-            assistant_text = "Could not detect if this is glucose meter or food."
+            assistant_text = "Could not detect valid image content."
+            context_description = "Image analysis failed."
+
+        # IMPORTANT: Inject the image context into the Gemini session history so it remembers!
+        try:
+            gemini_chat_session = gemini_service.get_chat_session(chat_id)
+            
+            # Only save a "memory" if the image was valid
+            if result.get("type") in ["glucose", "food"]:
+                # Use a more forceful 'user' role message to ensure it stays in history
+                # We prefix it with [IMAGE_MEMORY] to match new system
+                context_message = (
+                    f"[IMAGE_MEMORY]\n"
+                    f"{context_description}\n"
+                    f"TIMESTAMP: {datetime.utcnow().isoformat()}\n"
+                    f"Please internalize this memory for future questions."
+                )
+                gemini_chat_session.send_message(context_message)
+                
+                # CRITICAL FIX: Persist this context message to the DB so it survives session restoration!
+                # If we don't save it, 'restore_session_from_db' will wipe it out next time.
+                context_db_msg = Message(
+                    chat_session_id=chat_id,
+                    role="user", # Save as 'user' role so it's re-injected as user input
+                    text=context_message
+                )
+                db.add(context_db_msg)
+                await db.flush() # Ensure ID is generated
+                print(f"DEBUG: Persisted image context message to DB. ID: {context_db_msg.id}, ChatID: {chat_id}")
+            
+        except Exception as e:
+            print(f"Failed to update Gemini session history: {e}")
+            pass
 
         # Create message records and flush to get their IDs
         user_message = Message(
             chat_session_id=chat_id,
             role="user",
-            text="",
+            text="", # Image only
             image_path=image_path,
         )
+        # Store the friendly text for the user
         assistant_message = Message(
             chat_session_id=chat_id,
             role="assistant",
             text=assistant_text,
         )
+        
+        # OPTIONAL: We could store a "system" message in the DB too if we wanted to be explicit,
+        # but usually the assistant's previous response is enough context if it's descriptive.
+        # However, since the user wants to ask "what was in the image", we rely on the fact that
+        # the *assistant_text* contains the description ("Detected: Glucose Meter...").
+        # If the user asks "what is in the image", the AI reads the history which includes
+        # its own previous response describing the image. 
+        # The issue might be if the "text" field of the user message is empty.
+        
+        # Let's enrich the user message text slightly to help the AI know an image was sent
+        user_message.text = f"[Image uploaded: {context_description}]" 
+
         db.add_all([user_message, assistant_message])
         await db.flush()
 
@@ -183,6 +267,9 @@ async def ai_analyze_image(
             value = reading.get("value")
             unit = reading.get("unit")
             if value is not None and unit is not None:
+                # IMPORTANT: Convert unit to standard format if needed (e.g. mg/dl -> mg/dL)
+                # For now, just trust Gemini's output or normalize it.
+                
                 glucose_row = GlucoseReading(
                     user_id=user_id,
                     chat_session_id=chat_id,
@@ -190,6 +277,7 @@ async def ai_analyze_image(
                     image_path=image_path,
                     value=float(value),
                     unit=str(unit),
+                    taken_at=datetime.utcnow() # Ensure taken_at is set to now
                 )
                 db.add(glucose_row)
 
@@ -246,4 +334,3 @@ async def ai_analyze_image(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Image analysis failed: {str(e)}")
-

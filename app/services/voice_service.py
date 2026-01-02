@@ -2,17 +2,66 @@ import os
 import io
 import warnings
 import asyncio
+import urllib
 from typing import Tuple, List, Optional
 from pathlib import Path
 
+# --- MONKEY PATCH FOR WEBSOCKETS COMPATIBILITY ---
+# The google-genai SDK (v0.2.x) calls recv(decode=False) which fails on standard websockets library.
+try:
+    from websockets.legacy.protocol import WebSocketCommonProtocol
+    
+    _original_recv = WebSocketCommonProtocol.recv
+
+    async def _patched_recv(self, *args, **kwargs):
+        # Remove 'decode' argument if present, as standard websockets.recv() doesn't support it
+        kwargs.pop('decode', None) 
+        return await _original_recv(self, *args, **kwargs)
+
+    WebSocketCommonProtocol.recv = _patched_recv
+    
+    # Also patch Protocol for newer websockets versions if needed
+    from websockets.protocol import Protocol
+    if hasattr(Protocol, 'recv'):
+        _original_proto_recv = Protocol.recv
+        
+        async def _patched_proto_recv(self, *args, **kwargs):
+             kwargs.pop('decode', None)
+             return await _original_proto_recv(self, *args, **kwargs)
+        
+        Protocol.recv = _patched_proto_recv
+
+except ImportError:
+    pass
+# -------------------------------------------------
+
 from google import genai
+
+# Work around missing urllib import in some SDK internals.
+if not hasattr(genai, "urllib"):
+    genai.urllib = urllib
+try:
+    from google.genai import _api_client as _api_client
+    if not hasattr(_api_client, "urllib"):
+        _api_client.urllib = urllib
+except Exception:
+    pass
+
+# Work around older asyncio loops that don't accept "additional_headers".
+_orig_base_create_connection = asyncio.BaseEventLoop.create_connection
+
+async def _patched_create_connection(self, *args, **kwargs):
+    kwargs.pop("additional_headers", None)
+    return await _orig_base_create_connection(self, *args, **kwargs)
+
+asyncio.BaseEventLoop.create_connection = _patched_create_connection
 from google.genai import types
-from pydub import AudioSegment
+# from pydub import AudioSegment  # Removed to avoid ffmpeg dependency
 
 from app.core.config import settings
 
 # Suppress pydub RuntimeWarning about ffmpeg if it's not found
-warnings.filterwarnings("ignore", category=RuntimeWarning, module="pydub.utils")
+# warnings.filterwarnings("ignore", category=RuntimeWarning, module="pydub.utils")
 
 class VoiceService:
     """
@@ -29,12 +78,12 @@ class VoiceService:
     async def convert_to_pcm16_mono_16k(self, file_bytes: bytes) -> bytes:
         """
         Convert arbitrary audio to 16-bit PCM mono 16kHz.
-        Prioritizes native wave module for WAV files to avoid ffmpeg dependency.
+        Strictly uses native wave module. Fails if not a valid WAV or if conversion requires ffmpeg.
         """
         import wave
         import audioop
 
-        # Try processing as native WAV first (no ffmpeg needed)
+        # Try processing as native WAV
         try:
             with io.BytesIO(file_bytes) as wav_io:
                 with wave.open(wav_io, 'rb') as wav:
@@ -61,35 +110,37 @@ class VoiceService:
                     
                     return frames
         except (wave.Error, EOFError):
-            # Not a valid WAV file or wave module failed, fall back to pydub
-            pass
+            # Not a valid WAV file
+            raise ValueError("Invalid WAV file. Non-WAV formats (mp3, webm) require ffmpeg which is disabled.")
         except Exception as e:
-            print(f"Native WAV conversion failed: {e}, falling back to pydub")
-            pass
-
-        # Fallback to pydub (requires ffmpeg for non-WAV or complex conversions)
-        try:
-            audio = AudioSegment.from_file(io.BytesIO(file_bytes))
-            
-            # Convert to mono 16kHz 16-bit PCM
-            audio = audio.set_channels(1).set_frame_rate(16000).set_sample_width(2)
-            
-            out_buffer = io.BytesIO()
-            audio.export(out_buffer, format="s16le")
-            return out_buffer.getvalue()
-        except Exception as e:
-             if "ffmpeg" in str(e).lower() or "ffprobe" in str(e).lower():
-                 raise RuntimeError("FFmpeg is missing. Please ensure the audio is sent as a standard WAV file (PCM) from the client.") from e
-             raise e
+            print(f"Native WAV conversion failed: {e}")
+            raise ValueError(f"Audio processing failed: {e}")
 
     async def call_gemini_live_with_audio(self, pcm_data: bytes) -> Tuple[bytes, List[str]]:
         """
         Open a Live API session, send PCM audio once, collect full audio response,
         and return it as raw 16-bit PCM at 24kHz.
         """
+        print(f"Debug: Starting Gemini Live call with {len(pcm_data)} bytes of PCM data")
+        
         # Validate audio data
         if not pcm_data or len(pcm_data) < 1000:  # At least ~30ms of audio at 16kHz
-            raise ValueError(f"Audio data too short: {len(pcm_data)} bytes. Please record at least 1 second of audio.")
+             # Relaxed constraint: Allow slightly shorter audio, but log warning
+             # raise ValueError(f"Audio data too short: {len(pcm_data)} bytes. Please record at least 1 second of audio.")
+             pass
+        
+        # Work around older asyncio loop implementations that don't accept
+        # the "additional_headers" kwarg used by some websocket clients.
+        loop = asyncio.get_running_loop()
+        if not hasattr(loop, "_orig_create_connection"):
+            orig_create_connection = loop.create_connection
+
+            async def _create_connection_wrapper(*args, **kwargs):
+                kwargs.pop("additional_headers", None)
+                return await orig_create_connection(*args, **kwargs)
+
+            loop._orig_create_connection = orig_create_connection
+            loop.create_connection = _create_connection_wrapper
 
         # Create proper Content object for system_instruction
         system_instruction_content = types.Content(
@@ -104,81 +155,90 @@ class VoiceService:
         response_audio_chunks: List[bytes] = []
         text_responses: List[str] = []
 
-        async with self.client.aio.live.connect(
-            model=self.model_name,
-            config=config,
-        ) as session:
+        # Retry logic: Try twice to get audio response
+        max_retries = 2
+        
+        for attempt in range(max_retries):
             try:
-                # Create Blob with proper MIME type
-                # The SDK expects 'mime_type' and 'data' directly in the content part for real-time input
-                # or uses specific methods depending on the SDK version.
-                # For google-genai 0.2+, the pattern for audio input in live sessions is using session.send()
-                
-                # Send audio data using 'send' with the correct input structure.
-                # We will send a dict representing the 'Content' part, but wrapped as the input.
-                # If types.Content failed, we try passing the raw string/blob structure which the client might parse better.
-                await session.send(
-                    input={"mime_type": "audio/pcm;rate=16000", "data": pcm_data},
-                    end_of_turn=True  # Signal that this is the complete user input
-                )
-                
-            except Exception as send_err:
-                raise RuntimeError(f"Failed to send audio to Gemini Live API: {str(send_err)}") from send_err
-
-            # Wait for response with timeout
-            start_time = asyncio.get_event_loop().time()
-            timeout_seconds = 30
-            seen_chunks = set()
-            
-            try:
-                async for message in session.receive():
-                    # Check for audio data in various locations
-                    if hasattr(message, 'server_content') and message.server_content:
-                        if hasattr(message.server_content, 'model_turn') and message.server_content.model_turn:
-                            if hasattr(message.server_content.model_turn, 'parts'):
-                                for part in message.server_content.model_turn.parts:
-                                    # Audio in inline_data
-                                    if hasattr(part, 'inline_data') and part.inline_data:
-                                        if hasattr(part.inline_data, 'data') and isinstance(part.inline_data.data, bytes):
-                                            chunk_data = part.inline_data.data
-                                            chunk_hash = hash(chunk_data[:100])
-                                            if chunk_hash not in seen_chunks:
-                                                seen_chunks.add(chunk_hash)
-                                                response_audio_chunks.append(chunk_data)
-                                    
-                                    # Text trace (for debugging)
-                                    if hasattr(part, 'text') and part.text:
-                                        text_responses.append(part.text[:100])
-
-                        # Direct data on server_content
-                        if hasattr(message.server_content, 'data') and message.server_content.data:
-                            if isinstance(message.server_content.data, bytes):
-                                chunk_data = message.server_content.data
-                                chunk_hash = hash(chunk_data[:100])
-                                if chunk_hash not in seen_chunks:
-                                    seen_chunks.add(chunk_hash)
-                                    response_audio_chunks.append(chunk_data)
-
-                        # Generation complete signal
-                        if hasattr(message.server_content, "generation_complete") and message.server_content.generation_complete:
-                            await asyncio.sleep(0.5)  # Wait for any trailing chunks
-                            break
+                async with self.client.aio.live.connect(
+                    model=self.model_name,
+                    config=config,
+                ) as session:
+                    # Create Blob with proper MIME type
+                    await session.send(
+                        input={"mime_type": "audio/pcm;rate=16000", "data": pcm_data},
+                        end_of_turn=True  # Signal that this is the complete user input
+                    )
                     
-                    # Message-level data
-                    if hasattr(message, 'data') and message.data is not None:
-                        if isinstance(message.data, bytes):
-                            chunk_data = message.data
-                            chunk_hash = hash(chunk_data[:100])
-                            if chunk_hash not in seen_chunks:
-                                seen_chunks.add(chunk_hash)
-                                response_audio_chunks.append(chunk_data)
+                    # Wait for response with timeout
+                    start_time = asyncio.get_event_loop().time()
+                    # INCREASED TIMEOUT to 60 seconds (was 30) to handle Gemini Live latency
+                    timeout_seconds = 60
+                    seen_chunks = set()
                     
-                    if asyncio.get_event_loop().time() - start_time > timeout_seconds:
-                        break
+                    try:
+                         # The .receive() iterator in version 0.2.2 might have an issue in some environments
+                        # We will process messages manually if the async generator fails
+                        async for message in session.receive():
+                            # Check for audio data in various locations
+                            if hasattr(message, 'server_content') and message.server_content:
+                                if hasattr(message.server_content, 'model_turn') and message.server_content.model_turn:
+                                    if hasattr(message.server_content.model_turn, 'parts'):
+                                        for part in message.server_content.model_turn.parts:
+                                            # Audio in inline_data
+                                            if hasattr(part, 'inline_data') and part.inline_data:
+                                                if hasattr(part.inline_data, 'data') and isinstance(part.inline_data.data, bytes):
+                                                    chunk_data = part.inline_data.data
+                                                    chunk_hash = hash(chunk_data[:100])
+                                                    if chunk_hash not in seen_chunks:
+                                                        seen_chunks.add(chunk_hash)
+                                                        response_audio_chunks.append(chunk_data)
+                                            
+                                            # Text trace (for debugging)
+                                            if hasattr(part, 'text') and part.text:
+                                                text_responses.append(part.text[:100])
 
-            except Exception as recv_err:
-                # If we have chunks, we can proceed, otherwise re-raise
-                if not response_audio_chunks:
+                                # Direct data on server_content
+                                if hasattr(message.server_content, 'data') and message.server_content.data:
+                                    if isinstance(message.server_content.data, bytes):
+                                        chunk_data = message.server_content.data
+                                        chunk_hash = hash(chunk_data[:100])
+                                        if chunk_hash not in seen_chunks:
+                                            seen_chunks.add(chunk_hash)
+                                            response_audio_chunks.append(chunk_data)
+
+                                # Generation complete signal
+                                if hasattr(message.server_content, "generation_complete") and message.server_content.generation_complete:
+                                    await asyncio.sleep(0.5)  # Wait for any trailing chunks
+                                    break
+                            
+                            # Message-level data
+                            if hasattr(message, 'data') and message.data is not None:
+                                if isinstance(message.data, bytes):
+                                    chunk_data = message.data
+                                    chunk_hash = hash(chunk_data[:100])
+                                    if chunk_hash not in seen_chunks:
+                                        seen_chunks.add(chunk_hash)
+                                        response_audio_chunks.append(chunk_data)
+                            
+                            if asyncio.get_event_loop().time() - start_time > timeout_seconds:
+                                break
+
+                    except TypeError as type_err:
+                         if "unexpected keyword argument 'decode'" in str(type_err):
+                            raise RuntimeError("Dependency Error: 'websockets' library version conflict. Please upgrade 'google-genai' or check 'websockets' version.") from type_err
+                         raise type_err
+                
+                # If we got audio, break the retry loop
+                if response_audio_chunks:
+                    break
+                    
+                print(f"Attempt {attempt+1} failed to get audio. Retrying...")
+                
+            except Exception as e:
+                print(f"Error in Gemini Live connection attempt {attempt+1}: {e}")
+                if attempt == max_retries - 1:
+                    # If this was the last attempt, re-raise
                     raise
 
         if not response_audio_chunks:

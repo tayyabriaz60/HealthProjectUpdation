@@ -35,12 +35,13 @@ class GeminiService:
         self.chat_sessions: Dict[str, Any] = {}
         self._session_flags: Dict[str, Dict[str, bool]] = {}
     
-    def create_chat_session(self, model_name: Optional[str] = None) -> str:
+    def create_chat_session(self, model_name: Optional[str] = None, history: Optional[list] = None) -> str:
         """
         Create a new chat session with diabetes health assistant system prompt.
         
         Args:
             model_name: Optional model name (uses default if not provided)
+            history: Optional initial history to load into the session
             
         Returns:
             Unique chat session ID
@@ -48,36 +49,69 @@ class GeminiService:
         model = model_name or self.model_name
         
         # Create chat with system instruction for diabetes health assistant
-        # The system instruction guides the AI's behavior throughout the conversation
         system_prompt_applied = False
         try:
             # Try to use system_instruction parameter if available in SDK
             chat = self.client.chats.create(
                 model=model,
-                system_instruction=self.system_prompt
+                system_instruction=self.system_prompt,
+                history=history # Load history if provided
             )
             system_prompt_applied = True
-        except (TypeError, AttributeError, Exception):
+        except (TypeError, AttributeError, Exception) as e:
+            print(f"Fallback session creation due to: {e}")
             # Fallback: Create chat without system_instruction
-            # We'll send system prompt as first message to establish context
-            chat = self.client.chats.create(model=model)
-            # Send system instruction as first message to establish the assistant's role
-            try:
-                chat.send_message(f"Please act as a diabetes health assistant. Follow these guidelines:\n\n{self.system_prompt}")
-                system_prompt_applied = True
-            except Exception:
-                # If sending fails, continue without it
-                pass
+            chat = self.client.chats.create(model=model, history=history)
+            if not history:
+                # Send system instruction as first message only if no history exists
+                try:
+                    chat.send_message(f"Please act as a diabetes health assistant. Follow these guidelines:\n\n{self.system_prompt}")
+                    system_prompt_applied = True
+                except Exception:
+                    pass
         
         # Generate unique session ID
         chat_id = str(uuid.uuid4())
         
-        # Store the chat session and track if system prompt was applied
+        # Store the chat session
         self.chat_sessions[chat_id] = chat
         # Store a flag to know if system prompt was applied
         if not hasattr(self, '_session_flags'):
             self._session_flags = {}
         self._session_flags[chat_id] = {'system_prompt_applied': system_prompt_applied}
+        
+        return chat_id
+
+    async def restore_session_from_db(self, chat_id: str, db_messages: list) -> str:
+        """
+        Restores a Gemini chat session object using messages from the database.
+        Returns the chat_id.
+        """
+        # CRITICAL FIX: Always remove existing in-memory session to force a rebuild from DB.
+        # This ensures that any new messages added to DB (like image context) are picked up.
+        if chat_id in self.chat_sessions:
+            del self.chat_sessions[chat_id]
+            if chat_id in self._session_flags:
+                del self._session_flags[chat_id]
+            
+        # Convert DB messages to Gemini SDK format
+        formatted_history = []
+        print(f"DEBUG: Restoring session {chat_id} with {len(db_messages)} messages from DB")
+        for msg in db_messages:
+            role = "user" if msg.role == "user" else "model"
+            # Explicitly log content to verify image context is being loaded
+            if "IMAGE_ANALYSIS_CONTEXT" in msg.text:
+                print(f"DEBUG: Found IMAGE_ANALYSIS_CONTEXT in DB message: {msg.text[:50]}...")
+            
+            formatted_history.append({"role": role, "parts": [{"text": msg.text}]})
+            
+        # Create a new session with this history
+        # Note: We keep the same chat_id to maintain consistency
+        new_chat_id = self.create_chat_session(history=formatted_history)
+        
+        # Swap the generated ID with the existing one in memory
+        session_obj = self.chat_sessions.pop(new_chat_id)
+        self.chat_sessions[chat_id] = session_obj
         
         return chat_id
     
@@ -99,6 +133,33 @@ class GeminiService:
         
         return self.chat_sessions[chat_id]
     
+    @staticmethod
+    def _clean_response_text(text: str) -> str:
+        """
+        Forcefully removes markdown syntax to ensure clean plain text output.
+        Removes: bold (**), italics (* or _), headers (#), code blocks (```).
+        """
+        import re
+        if not text:
+            return ""
+            
+        # Remove code blocks
+        text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+        
+        # Remove bold/italic markers: **, *, __, _
+        text = re.sub(r'\*\*(.*?)\*\*', r'\1', text) # **text** -> text
+        text = re.sub(r'\*(.*?)\*', r'\1', text)     # *text* -> text
+        text = re.sub(r'__(.*?)__', r'\1', text)     # __text__ -> text
+        text = re.sub(r'_(.*?)_', r'\1', text)       # _text_ -> text
+        
+        # Remove headers (# Header)
+        text = re.sub(r'^#+\s*', '', text, flags=re.MULTILINE)
+        
+        # Collapse multiple newlines/spaces
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text.strip()
+
     async def send_message(self, message: str, chat_id: Optional[str] = None, retry_count: int = 2) -> tuple[str, str]:
         """
         Send a message to the chatbot.
@@ -132,11 +193,56 @@ class GeminiService:
                     chat_id = self.create_chat_session()
                     chat = self.chat_sessions[chat_id]
                 
+                # Check if this is a follow-up about an image from history
+                # If history contains image notes, remind the model
+                history = self.get_chat_history(chat_id)
+                image_context = ""
+                
+                # Scan history in reverse to find ONLY the most recent image context
+                # We stop as soon as we find the FIRST match from the end (latest one)
+                for msg in reversed(history):
+                    text_content = msg.get("text", "")
+                    
+                    # Check for our specific markers
+                    # Updated to include [IMAGE_MEMORY]
+                    has_marker = (
+                        "[IMAGE_MEMORY]" in text_content or
+                        "IMAGE_ANALYSIS_CONTEXT" in text_content or 
+                        "Detected: Glucose Meter" in text_content or 
+                        "Detected: Food" in text_content or
+                        "Detected: Unknown" in text_content or
+                        "The user uploaded an image" in text_content
+                    )
+                    
+                    if has_marker:
+                         image_context = text_content
+                         break # Found the latest image! STOP searching.
+                
+                # Check if the user is asking about an image
+                normalized_msg = message.lower()
+                is_asking_about_image = any(k in normalized_msg for k in [
+                    "image", "photo", "picture", "what is this", "see", "look like", 
+                    "summary", "summarize", "detect", "earlier", "showed"
+                ])
+
+                if image_context and is_asking_about_image:
+                     # FORCEFULLY inject the context again so the model cannot ignore it
+                     message = (
+                         f"[SYSTEM NOTE: The user is asking about an image they previously uploaded. "
+                         f"You cannot see the image file directly, but here is the STORED MEMORY of it that you MUST use to answer.\n"
+                         f"Please be PROFESSIONAL, CONCISE, and SIMPLE. Do not list raw data fields.\n"
+                         f"CONTEXT:\n{image_context}]\n\n"
+                         f"User Question: {message}"
+                     )
+
                 # Send message - SDK automatically includes full conversation history
                 # System prompt is already applied during session creation
                 response = chat.send_message(message)
                 
-                return response.text, chat_id
+                # Clean response (strip markdown)
+                clean_text = self._clean_response_text(response.text)
+                
+                return clean_text, chat_id
                 
             except Exception as e:
                 error_str = str(e)
@@ -244,14 +350,18 @@ class GeminiService:
                     
                     # Safely extract text from message parts
                     if hasattr(message, 'parts') and message.parts:
-                        if len(message.parts) > 0:
-                            part = message.parts[0]
+                        parts_texts = []
+                        for part in message.parts:
                             if hasattr(part, 'text'):
-                                text = part.text
+                                parts_texts.append(part.text)
                             elif hasattr(part, 'content'):
-                                text = part.content
+                                parts_texts.append(part.content)
+                            elif hasattr(part, 'mime_type') and 'image' in part.mime_type:
+                                parts_texts.append("[Image Uploaded]")
                             else:
-                                text = str(part)
+                                parts_texts.append(str(part))
+                        text = " ".join(parts_texts)
+                        
                     elif hasattr(message, 'text'):
                         text = message.text
                     elif hasattr(message, 'content'):
@@ -292,6 +402,51 @@ class GeminiService:
             return True
         return False
 
+    def extract_health_data_from_text(self, text: str) -> dict:
+        """
+        Analyze user text to extract health data (glucose readings or food logs).
+        Returns a dict with type ("glucose", "food", or "none") and the extracted data.
+        """
+        prompt = (
+            "Analyze the following user message for health data. "
+            "If the user is reporting a glucose level (e.g., 'my sugar is 120', 'glucose 5.5'), extract it.\n"
+            "If the user is reporting a meal (e.g., 'I ate a burger', 'had oatmeal for breakfast'), extract it.\n"
+            "Return ONLY a JSON object with this structure (no markdown):\n"
+            "{\n"
+            '  "type": "glucose" | "food" | "none",\n'
+            '  "data": {\n'
+            '    // If glucose:\n'
+            '    "value": <number>,\n'
+            '    "unit": "mg/dL" | "mmol/L",\n'
+            '    // If food:\n'
+            '    "meal_name": "<name>",\n'
+            '    "calories": <estimated_number>,\n'
+            '    "carbs_g": <estimated_number>\n'
+            '  }\n'
+            "}\n"
+            f"User Message: {text}"
+        )
+
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
+            
+            response_text = getattr(response, "text", "") or "{}"
+            
+            # Clean up potential markdown code blocks
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0].strip()
+                
+            import json
+            return json.loads(response_text)
+        except Exception as e:
+            print(f"Error extracting health data: {e}")
+            return {"type": "none", "data": {}}
+
     def analyze_glucose_image(self, image_data: bytes, mime_type: Optional[str] = None) -> dict:
         """
         Analyze a glucose meter image and return parsed value, unit, and brief analysis.
@@ -304,7 +459,7 @@ class GeminiService:
 
         # Build multimodal prompt with image
         prompt = (
-            "Read the blood glucose value from this glucose meter image.\n"
+            "Read the blood glucose value from this image (it could be a photo of a meter or a screenshot of an app).\n"
             'Respond ONLY with the number and unit in this exact format: "VALUE UNIT"\n'
             'Examples: "125 mg/dL" or "6.9 mmol/L"\n'
             'If you cannot read it clearly, respond with "Unable to read"'
@@ -345,6 +500,7 @@ class GeminiService:
             contents=[analysis_prompt]
         )
         analysis_text = getattr(analysis_resp, "text", "") or ""
+        analysis_text = self._clean_response_text(analysis_text) # Force clean
 
         return {
             "value": value,
@@ -375,7 +531,7 @@ class GeminiService:
 
         # Build multimodal prompt with image
         prompt = (
-            "You are a diabetes nutrition assistant. Analyze this food image and reply ONLY with JSON.\n"
+            "You are a diabetes nutrition assistant. Analyze this food image or screenshot and reply ONLY with JSON.\n"
             "Return this JSON shape (no markdown, no extra text):\n"
             "{\n"
             '  "meal_name": "<short name>",\n'
@@ -388,7 +544,12 @@ class GeminiService:
             "- Keep it brief and readable for a patient.\n"
             "- If unsure, set calories or carbs_g to null.\n"
             "- recommendation_level must be exactly YES, CAREFUL, or NO.\n"
-            "- Do not include any extra fields or explanations."
+            "- Do not include any extra fields or explanations.\n"
+            "- CRITICAL: Use the Patient Health Context (e.g. latest glucose) to determine the recommendation.\n"
+            "- If glucose is HIGH (>180), be stricter with carbs/sugar.\n"
+            "- If glucose is LOW (<70), suggest fast-acting carbs if appropriate.\n"
+            "- STRICTLY NO MARKDOWN in recommendation_text. No bold (**), no italics (*).\n"
+            "- Keep recommendation_text strictly between 2 to 3 lines."
             f"{context_part}"
         )
 
@@ -454,6 +615,38 @@ class GeminiService:
             "raw_response": response_text
         }
 
+    def analyze_general_image(self, image_data: bytes, mime_type: Optional[str] = None) -> dict:
+        """
+        Analyze a general image that is neither glucose meter nor food.
+        """
+        if not image_data:
+            raise ValueError("Image file is empty")
+        if genai_types is None:
+            raise RuntimeError("google.genai.types not available for image handling")
+
+        prompt = (
+            "Analyze this image and provide a brief, helpful description. "
+            "If it relates to health, fitness, or lifestyle, mention that connection. "
+            "Keep the response concise (2-3 sentences)."
+        )
+
+        image_part = genai_types.Part.from_bytes(
+            data=image_data,
+            mime_type=mime_type or "image/png"
+        )
+
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=[{"role": "user", "parts": [{"text": prompt}, image_part]}]
+        )
+
+        description = getattr(response, "text", "") or "I see an image but I'm not sure what it is."
+
+        return {
+            "description": description,
+            "raw_response": description
+        }
+
     def analyze_image_auto(
         self,
         image_data: bytes,
@@ -461,15 +654,8 @@ class GeminiService:
         health_context: Optional[str] = None
     ) -> dict:
         """
-        Auto-detect whether the image is a glucose meter or food, then analyze accordingly.
-
-        Args:
-            image_data: Image file bytes
-            mime_type: MIME type of the image (optional)
-            health_context: Optional health context for food analysis
-
-        Returns:
-            Dict containing type ("glucose" or "food") and corresponding analysis payload.
+        Auto-detect whether the image is a glucose meter, food, or something else.
+        Strictly rejects non-medical images.
         """
         if not image_data:
             raise ValueError("Image file is empty")
@@ -481,12 +667,12 @@ class GeminiService:
             mime_type=mime_type or "image/png"
         )
 
-        # Step 1: classify the image (glucose meter vs food)
+        # Step 1: classify the image (glucose meter vs food vs other)
         classify_prompt = (
-            "Classify this image as exactly one of: GLUCOSE or FOOD.\n"
-            "- If it is a glucose meter display with a numeric reading, answer: GLUCOSE\n"
-            "- If it is a food/meal, answer: FOOD\n"
-            "- If it is ANYTHING ELSE (e.g. selfie, landscape, computer screen, code, blurry, unclear), answer: UNKNOWN\n"
+            "Classify this image as exactly one of: GLUCOSE, FOOD, or OTHER.\n"
+            "- If it is a glucose meter display, or a screenshot of a medical app showing a glucose reading, answer: GLUCOSE\n"
+            "- If it is a food/meal, or a screenshot of a food logging app showing a meal, answer: FOOD\n"
+            "- If it is anything else, answer: OTHER\n"
             "Reply with a single word only."
         )
 
@@ -496,19 +682,13 @@ class GeminiService:
         )
         classify_text = (getattr(classify_resp, "text", "") or "").strip().upper()
 
-        classification = "unknown"
+        classification = "other"
         if "GLUCOSE" in classify_text:
             classification = "glucose"
-        elif "FOOD" in classify_text and "UNKNOWN" not in classify_text:
+        elif "FOOD" in classify_text:
             classification = "food"
         
-        if classification == "unknown":
-            return {
-                "success": False,
-                "type": "unknown", 
-                "message": "Please upload a glucose meter or food image only."
-            }
-
+        # Branch based on classification
         if classification == "glucose":
             reading = self.analyze_glucose_image(
                 image_data=image_data,
@@ -518,10 +698,16 @@ class GeminiService:
                 "type": "glucose",
                 "reading": {"value": reading["value"], "unit": reading["unit"]},
                 "analysis": reading.get("analysis"),
-                "raw_response": reading.get("raw_response")
+                "raw_response": reading.get("raw_response"),
+                # Generic Memory Summary
+                "memory_summary": (
+                    f"CATEGORY: Glucose Meter\n"
+                    f"SUMMARY: An image of a digital glucose meter.\n"
+                    f"DETAILS: Reading: {reading['value']} {reading['unit']}. Analysis: {reading.get('analysis')}"
+                )
             }
 
-        if classification == "food":
+        elif classification == "food":
             meal = self.analyze_food_image(
                 image_data=image_data,
                 mime_type=mime_type,
@@ -536,11 +722,18 @@ class GeminiService:
                 },
                 "recommendation_level": meal.get("recommendation_level"),
                 "recommendation": meal.get("recommendation_text"),
-                "raw_response": meal.get("raw_response")
+                "raw_response": meal.get("raw_response"),
+                # Generic Memory Summary
+                "memory_summary": (
+                    f"CATEGORY: Food\n"
+                    f"SUMMARY: An image of a meal identified as {meal.get('meal_name')}.\n"
+                    f"DETAILS: Est. Calories: {meal.get('calories')}, Carbs: {meal.get('carbs_g')}g. Recommendation: {meal.get('recommendation_text')}"
+                )
             }
-
-        # Instead of error, return a friendly object for frontend to display
-        return {
-            "type": "unknown",
-            "message": "I'm not sure what this is. I can help analyze your glucose meter readings or food photos. Could you try uploading one of those?"
-        }
+            
+        else:
+            # STRICT REJECTION for non-medical images as requested
+            return {
+                "type": "unknown", 
+                "message": "Could not analyze this image. Please upload a food image or glucose meter."
+            }

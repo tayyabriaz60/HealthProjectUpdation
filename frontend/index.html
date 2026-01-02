@@ -3,298 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot API Tester</title>
+    <title>Diabetes Care Assistant</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Modern, Professional Styling */
+        /* Modern, Professional Styling Overrides */
         :root {
             --primary-color: #007bff;
+            --primary-dark: #0056b3;
             --secondary-color: #6c757d;
             --success-color: #28a745;
-            --bg-color: #f8f9fa;
+            --bg-color: #f0f2f5;
             --text-color: #333;
-            --border-radius: 8px;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 480px; /* Mobile-first width */
             background: white;
-            padding: 25px;
+            padding: 0;
             border-radius: var(--border-radius);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 25px;
-            font-size: 1.8rem;
-        }
-
-        /* Config Section */
-        .config-section {
-            background: #e9ecef;
-            padding: 15px;
-            border-radius: var(--border-radius);
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
-
-        .config-section label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .config-section input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            margin-top: 4px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .config-section button {
-            margin-top: 10px;
-            width: 100%;
-        }
-
-        /* Chat Section */
-        .chat-section {
-            border: 1px solid #dee2e6;
-            border-radius: var(--border-radius);
-            overflow: hidden;
+            box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            height: 500px;
+            overflow: hidden;
+            height: 90vh;
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .app-header h1 {
+            font-size: 1.2rem;
+            margin: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #90ff90;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Chat Area */
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            overflow: hidden;
+            position: relative;
+            border: none;
+            border-radius: 0;
+            height: auto;
         }
 
         .chat-messages {
             flex: 1;
-            padding: 15px;
+            padding: 20px;
             overflow-y: auto;
-            background: #fff;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         .message {
-            margin-bottom: 12px;
-            padding: 10px 14px;
-            border-radius: 12px;
-            max-width: 80%;
-            line-height: 1.4;
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
             font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            margin-bottom: 0; /* Handled by gap */
         }
 
         .message.user {
             background-color: var(--primary-color);
             color: white;
             align-self: flex-end;
-            margin-left: auto;
-            border-bottom-right-radius: 2px;
+            border-bottom-right-radius: 4px;
         }
 
         .message.model {
-            background-color: #f1f3f5;
+            background-color: white;
             color: var(--text-color);
             align-self: flex-start;
-            border-bottom-left-radius: 2px;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #e9ecef;
         }
 
         .message.system {
-            background-color: #fff3cd;
+            background-color: rgba(255, 193, 7, 0.15);
             color: #856404;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-align: center;
-            margin: 10px auto;
-            width: 90%;
+            align-self: center;
+            width: auto;
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: none;
         }
 
         /* Input Area */
         .input-section {
             padding: 15px;
-            background: #f8f9fa;
-            border-top: 1px solid #dee2e6;
+            background: white;
+            border-top: 1px solid #eee;
+            position: relative;
         }
 
-        .input-group {
+        .input-wrapper {
             display: flex;
+            align-items: center;
             gap: 10px;
-            margin-bottom: 10px;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 25px;
+            border: 1px solid #e9ecef;
         }
 
         #messageInput {
             flex: 1;
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 20px;
+            border: none;
+            background: transparent;
+            padding: 10px 5px;
+            font-size: 1rem;
             outline: none;
         }
 
-        button {
-            padding: 10px 16px;
+        .action-btn {
+            background: none;
             border: none;
-            border-radius: 20px;
             cursor: pointer;
-            font-weight: 600;
-            transition: opacity 0.2s;
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        button:hover {
-            opacity: 0.9;
+        .action-btn:hover {
+            background-color: rgba(0,0,0,0.05);
+            color: var(--primary-color);
+        }
+
+        .action-btn.primary {
+            color: var(--primary-color);
+        }
+
+        .voice-btn {
+            background-color: #f8f9fa;
+            color: #dc3545;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s;
+        }
+        
+        .voice-btn:hover {
+            background-color: #fff5f5;
+        }
+
+        .voice-btn.recording {
+            background-color: #dc3545;
+            color: white;
+            animation: pulse 1.5s infinite;
+            border-color: #dc3545;
         }
 
         #sendBtn {
             background-color: var(--primary-color);
             color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            box-shadow: 0 2px 5px rgba(0,123,255,0.3);
         }
 
-        #voiceBtn {
-            background-color: #dc3545;
-            color: white;
+        #sendBtn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
         }
 
-        #voiceBtn:active {
-            background-color: #c82333;
-            transform: scale(0.98);
-        }
-
-        /* Smart Upload */
-        .smart-section {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: var(--border-radius);
-            border: 1px dashed #ced4da;
-            text-align: center;
-        }
-
-        .smart-section h3 {
-            margin-top: 0;
-            color: var(--secondary-color);
-            font-size: 1rem;
-        }
-
-        .upload-btn {
-            background-color: #6c757d;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        #smartResult {
-            margin-top: 15px;
-            text-align: left;
-            font-size: 0.9rem;
-            padding: 10px;
-            background: white;
-            border-radius: 5px;
+        /* Config Panel (Hidden by default) */
+        .config-panel {
             display: none;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            width: 280px;
+            z-index: 100;
         }
-
-        #smartResult.show {
+        
+        .config-panel.show {
             display: block;
         }
-
-        /* Info Section */
-        .info-section {
-            margin-top: 30px;
-            font-size: 0.85rem;
-            color: #6c757d;
-            border-top: 1px solid #dee2e6;
-            padding-top: 15px;
+        
+        .config-panel h3 {
+            margin-top: 0;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: var(--text-color);
         }
+
+        .config-row {
+            margin-bottom: 15px;
+        }
+
+        .config-row label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+        }
+
+        .config-row input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .quick-chip {
+            font-size: 0.85rem;
+            padding: 8px 15px;
+            background-color: #e9ecef;
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: background 0.2s;
+        }
+        
+        .quick-chip:hover {
+            background-color: #dde2e6;
+        }
+
+        /* Loading Animation */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 10px 15px;
+            background: #fff;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #adb5bd;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🤖 Health Assistant</h1>
-        
-        <div class="config-section">
-            <details>
-                <summary>⚙️ Configuration (Click to Expand)</summary>
-                <div style="margin-top: 10px;">
-                    <label>
-                        API URL:
-                        <input type="text" id="apiUrl" value="http://127.0.0.1:8000/api/chat" placeholder="API URL">
-                    </label>
-                    <label>
-                        User ID:
-                        <input type="text" id="userId" value="test_user_123" placeholder="User ID (Firebase UID)">
-                    </label>
-                    <button id="testBtn" onclick="testConnection()" style="background: var(--success-color); color: white;">Test Connection</button>
-                    <div style="margin-top: 10px; display: flex; gap: 15px;">
-                        <label style="display: flex; align-items: center; font-weight: normal;">
-                            <input type="checkbox" id="streamMode"> Stream
-                        </label>
-                        <label style="display: flex; align-items: center; font-weight: normal;">
-                            <input type="checkbox" id="includeHistory" checked style="margin-right: 5px;"> History
-                        </label>
-                    </div>
-                </div>
-            </details>
+        <!-- Header -->
+        <div class="app-header">
+            <h1><i class="fas fa-heartbeat"></i> Diabetes Assistant</h1>
+            <div class="header-actions">
+                <button class="action-btn" onclick="toggleConfig()" style="color: white; opacity: 0.9;">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
         </div>
 
+        <!-- Settings Panel -->
+        <div id="configPanel" class="config-panel">
+            <h3>Settings</h3>
+            <div class="config-row">
+                <label>User ID</label>
+                <input type="text" id="userId" value="test_user_123">
+            </div>
+            <div class="config-row">
+                <label>API URL</label>
+                <input type="text" id="apiUrl" value="http://127.0.0.1:8000/api/chat">
+            </div>
+            <div class="config-row">
+                <label style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="streamMode"> Stream Responses
+                </label>
+            </div>
+            <button onclick="testConnection()" style="width:100%; padding:8px; background:var(--success-color); color:white; border:none; border-radius:6px; cursor:pointer;">
+                Check Connection
+            </button>
+        </div>
+
+        <!-- Chat Area -->
         <div class="chat-section">
             <div class="chat-messages" id="chatMessages">
                 <div class="message system">
-                    <strong>System:</strong> Welcome! I am your AI Health Assistant.
+                    <i class="fas fa-info-circle"></i> Welcome! I'm here to help manage your health.
                 </div>
             </div>
             
-            <div class="input-section">
-                <!-- Hidden Chat ID -->
-                <input type="hidden" id="chatId" />
-                
-                <div class="input-group">
-                    <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)"/>
-                    <button id="voiceBtn" onmousedown="startRecording()" onmouseup="stopRecording()" ontouchstart="startRecording()" ontouchend="stopRecording()">🎤</button>
-                    <button id="sendBtn" onclick="sendMessage()">Send</button>
-                </div>
-                <div id="voiceStatus" style="text-align: center; font-size: 0.8rem; height: 1.2em; color: var(--secondary-color);"></div>
-                
-                <div style="text-align: right; margin-top: 5px;">
-                    <button onclick="clearChat()" style="background: none; color: #dc3545; font-size: 0.8rem; padding: 5px;">Clear Chat</button>
-                </div>
-            </div>
+            <!-- Smart Analysis Overlay (Result) -->
+            <div id="smartResult" class="smart-result" style="margin: 0 20px 10px 20px;"></div>
         </div>
 
-        <div class="smart-section">
-            <h3>📷 Smart Analysis</h3>
-            <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Upload a photo of your glucose meter or food.</p>
-            
-            <input type="file" id="smartImageInput" accept="image/*" style="display: none;" onchange="handleSmartImageSelect(event)">
-            
-            <div class="input-group" style="margin-bottom: 10px;">
-                <input type="text" id="smartHealthContextInput" placeholder="Optional context (e.g., 'Feeling dizzy')" 
-                       style="padding: 8px; border: 1px solid #ced4da; border-radius: 4px; width: 100%;">
+        <!-- Input Area -->
+        <div class="input-section">
+            <input type="hidden" id="chatId" />
+            <input type="checkbox" id="includeHistory" checked style="display:none;">
+
+            <div class="quick-actions" id="quickActions">
+                <div class="quick-chip" onclick="setInput('Glucose is 180')">🍭 Glucose 180</div>
+                <div class="quick-chip" onclick="setInput('I ate a burger')">🍔 Ate burger</div>
             </div>
 
-            <!-- Fixed Upload Button Style -->
-            <button id="smartUploadBtn" onclick="document.getElementById('smartImageInput').click()" 
-                    style="background-color: #6c757d; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; border: none; width: 100%;">
-                📤 Upload Image
-            </button>
-            
-            <div id="smartResult" class="smart-result"></div>
-        </div>
+            <div class="input-wrapper">
+                <!-- Smart Upload Button -->
+                <button class="action-btn" onclick="document.getElementById('smartImageInput').click()" title="Upload Image">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <input type="file" id="smartImageInput" accept="image/*" style="display: none;" onchange="handleSmartImageSelect(event)">
+                <input type="text" id="smartHealthContextInput" style="display:none;" value="">
 
-        <div class="info-section">
-            <p><strong>Features Active:</strong> Voice (Native WAV), Smart Context (Glucose/Food History), Multilingual.</p>
+                <input type="text" id="messageInput" placeholder="Message..." onkeypress="handleKeyPress(event)"/>
+                
+                <!-- Voice Button -->
+                <button id="voiceBtn" class="voice-btn" onmousedown="startRecording()" onmouseup="stopRecording()" ontouchstart="startRecording()" ontouchend="stopRecording()" title="Hold to Speak">
+                    <i class="fas fa-microphone"></i>
+                </button>
+
+                <!-- Send Button -->
+                <button id="sendBtn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div id="voiceStatus" style="text-align: center; font-size: 0.75rem; color: var(--secondary-color); margin-top: 5px; height: 1em;"></div>
         </div>
     </div>
 
@@ -303,7 +414,24 @@
         function handleKeyPress(e) {
             if (e.key === 'Enter') sendMessage();
         }
+        
+        function toggleConfig() {
+            document.getElementById('configPanel').classList.toggle('show');
+        }
+
+        function setInput(text) {
+            document.getElementById('messageInput').value = text;
+            document.getElementById('messageInput').focus();
+        }
+
+        // Close config on click outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('configPanel');
+            const btn = document.querySelector('.header-actions button');
+            if (!panel.contains(event.target) && !btn.contains(event.target)) {
+                panel.classList.remove('show');
+            }
+        });
     </script>
 </body>
 </html>
-

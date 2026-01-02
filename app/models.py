@@ -11,7 +11,7 @@ class ChatSession(Base):
     """A logical chat session that groups messages for a (future) user."""
     __tablename__ = "chat_sessions"
 
-    # We reuse the existing chat_id (UUID string) as primary key so API doesn’t change.
+    # We reuse the existing chat_id (UUID string) as primary key so API doesn't change.
     id: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
 
     # Placeholder for future auth integration; nullable for now.

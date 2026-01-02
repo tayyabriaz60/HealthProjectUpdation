@@ -45,11 +45,13 @@ async def voice_chat(file: UploadFile = File(...)):
         else:
             # Convert generic audio (mp3, wav, webm, etc.) to PCM
             try:
+                # IMPORTANT: Since we are using native Python wave module, the input MUST be a valid WAV file.
+                # Flutter app is configured to send WAV (PCM16).
                 pcm_16k = await voice_service.convert_to_pcm16_mono_16k(file_bytes)
             except Exception as conv_err:
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Audio conversion failed: {str(conv_err)}"
+                    detail=f"Audio conversion failed: {str(conv_err)}. Ensure you are sending a valid WAV file."
                 ) from conv_err
 
         # Call Gemini Live

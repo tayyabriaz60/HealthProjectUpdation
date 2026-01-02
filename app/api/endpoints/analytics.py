@@ -54,37 +54,36 @@ async def get_weekly_glucose(
     - Custom period: `GET /api/analytics/glucose/weekly?user_id=YOUR_UID&days=14`
     """
     try:
-        # Calculate date range (last N days from today)
-        end_date = datetime.utcnow()
-        start_date = end_date - timedelta(days=days)
+        # Calculate date range (last N days including today)
+        today = datetime.utcnow().date()
+        dates_to_show = [today - timedelta(days=i) for i in range(days)]
+        dates_to_show.sort()  # Ascending order
+        
+        start_date_limit = dates_to_show[0]
         
         # Query glucose readings for this user within the date range
+        # Start from the beginning of the first day to capture all relevant readings
+        query_start = datetime.combine(start_date_limit, datetime.min.time())
+        query_end = datetime.utcnow()
+        
         stmt = select(GlucoseReading).where(
             and_(
                 GlucoseReading.user_id == user_id,
-                GlucoseReading.taken_at >= start_date,
-                GlucoseReading.taken_at <= end_date
+                GlucoseReading.taken_at >= query_start,
+                GlucoseReading.taken_at <= query_end
             )
         ).order_by(GlucoseReading.taken_at.asc())
         
         result = await db.execute(stmt)
         readings = result.scalars().all()
         
-        if not readings:
-            # Return empty structure if no data
-            return {
-                "user_id": user_id,
-                "period_days": days,
-                "start_date": start_date.date().isoformat(),
-                "end_date": end_date.date().isoformat(),
-                "daily_data": [],
-                "message": "No glucose readings found for this period"
-            }
+        # Determine unit (default to mmol/L if no readings found)
+        unit = "mmol/L"
+        if readings:
+            unit = readings[0].unit
         
         # Group readings by day
         daily_groups = {}
-        unit = readings[0].unit  # Assume all readings use the same unit
-        
         for reading in readings:
             # Get date (YYYY-MM-DD) as key
             date_key = reading.taken_at.date().isoformat()
@@ -92,42 +91,55 @@ async def get_weekly_glucose(
             if date_key not in daily_groups:
                 daily_groups[date_key] = []
             
-            daily_groups[date_key].append({
-                "value": reading.value,
-                "unit": reading.unit,
-                "taken_at": reading.taken_at.isoformat()
-            })
+            daily_groups[date_key].append(reading)
         
-        # Build daily data with averages
+        # Build daily data, ensuring all days in range are included
         daily_data = []
         day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         
-        # Sort by date
-        sorted_dates = sorted(daily_groups.keys())
-        
-        for date_str in sorted_dates:
-            readings_for_day = daily_groups[date_str]
-            values = [r["value"] for r in readings_for_day]
-            average_value = sum(values) / len(values) if values else 0.0
+        for d in dates_to_show:
+            date_str = d.isoformat()
+            day_name = day_names[d.weekday()]
             
-            # Get day name
-            date_obj = datetime.fromisoformat(date_str).date()
-            day_name = day_names[date_obj.weekday()]
+            readings_for_day = daily_groups.get(date_str, [])
             
-            daily_data.append({
-                "date": date_str,
-                "day_name": day_name,
-                "average_value": round(average_value, 2),  # Round to 2 decimal places
-                "unit": unit,
-                "reading_count": len(readings_for_day),
-                "readings": readings_for_day
-            })
+            if readings_for_day:
+                values = [r.value for r in readings_for_day]
+                average_value = sum(values) / len(values)
+                day_unit = readings_for_day[0].unit
+                
+                reading_dicts = [
+                    {
+                        "value": r.value,
+                        "unit": r.unit,
+                        "taken_at": r.taken_at.isoformat()
+                    } for r in readings_for_day
+                ]
+                
+                daily_data.append({
+                    "date": date_str,
+                    "day_name": day_name,
+                    "average_value": round(average_value, 2),
+                    "unit": day_unit,
+                    "reading_count": len(readings_for_day),
+                    "readings": reading_dicts
+                })
+            else:
+                # Add empty entry for days with no data
+                daily_data.append({
+                    "date": date_str,
+                    "day_name": day_name,
+                    "average_value": 0.0,
+                    "unit": unit,
+                    "reading_count": 0,
+                    "readings": []
+                })
         
         return {
             "user_id": user_id,
             "period_days": days,
-            "start_date": start_date.date().isoformat(),
-            "end_date": end_date.date().isoformat(),
+            "start_date": dates_to_show[0].isoformat(),
+            "end_date": dates_to_show[-1].isoformat(),
             "daily_data": daily_data
         }
         
@@ -183,6 +195,10 @@ async def get_glucose_summary(
                 "user_id": user_id,
                 "period_days": days,
                 "total_readings": 0,
+                "average_value": 0.0,
+                "min_value": 0.0,
+                "max_value": 0.0,
+                "unit": "mmol/L",
                 "message": "No glucose readings found for this period"
             }
         
@@ -204,4 +220,3 @@ async def get_glucose_summary(
             status_code=500,
             detail=f"Error retrieving glucose summary: {str(e)}"
         )
-
