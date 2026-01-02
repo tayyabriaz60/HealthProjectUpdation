@@ -13,6 +13,13 @@ class Base(DeclarativeBase):
 
 database_url: Optional[str] = settings.DATABASE_URL
 
+# Handle potential protocol mismatch for asyncpg
+if database_url:
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif database_url.startswith("postgresql://") and "+asyncpg" not in database_url:
+        database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
 if not database_url:
     # DATABASE_URL not configured – keep placeholders so imports don't crash.
     engine = None
