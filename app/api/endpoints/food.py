@@ -174,10 +174,11 @@ async def ai_analyze_image(
              context_description = memory_summary
 
         elif result.get("type") == "unknown":
-            # Pass the friendly error message directly
-            assistant_text = result.get("message") or "Could not analyze this image. Please upload a food image or glucose meter."
-            # Do NOT save a valid memory context for rejected images, so follow-up questions won't use it.
-            context_description = "The user uploaded an invalid image which was rejected."
+            # For unknown images, show description and save memory so AI can answer "what was in image"
+            description = result.get("description") or "An image that is not a glucose meter or food."
+            assistant_text = result.get("message") or f"This image shows: {description}. This is not a glucose meter or food image."
+            # Save memory for unknown images too, so AI can answer follow-up questions
+            context_description = result.get("memory_summary") or f"User uploaded an image: {description}"
         else:
             assistant_text = "Could not detect valid image content."
             context_description = "Image analysis failed."
@@ -186,8 +187,8 @@ async def ai_analyze_image(
         try:
             gemini_chat_session = gemini_service.get_chat_session(chat_id)
             
-            # Only save a "memory" if the image was valid
-            if result.get("type") in ["glucose", "food"]:
+            # Save memory for ALL image types (glucose, food, AND unknown) so AI can answer follow-up questions
+            if result.get("type") in ["glucose", "food", "unknown"]:
                 # Use a more forceful 'user' role message to ensure it stays in history
                 # We prefix it with [IMAGE_MEMORY] to match new system
                 context_message = (

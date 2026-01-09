@@ -1159,10 +1159,33 @@ class GeminiService:
             }
             
         else:
+            # For OTHER images, still generate a description so AI can answer "what was in image"
+            try:
+                description_prompt = (
+                    "Describe what you see in this image in 1-2 sentences. "
+                    "Be specific about what objects, people, or scenes are visible. "
+                    "This is NOT a glucose meter or food image."
+                )
+                desc_resp = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=[{"role": "user", "parts": [{"text": description_prompt}, image_part]}]
+                )
+                description = desc_resp.text.strip() if desc_resp.text else "An image that is not a glucose meter or food."
+            except Exception as e:
+                print(f"Error generating description for unknown image: {e}")
+                description = "An image that is not a glucose meter or food."
+            
             return {
-                "type": "unknown", 
+                "type": "unknown",
+                "description": description,
                 "message": (
-                    "I don't recognize this as a glucose reading or food. "
-                    "Please upload a photo of your meter or your meal so I can assist you."
+                    f"This image shows: {description}. "
+                    "This is not a glucose meter or food image. "
+                    "Please upload a photo of your meter or your meal so I can assist you with diabetes management."
+                ),
+                "memory_summary": (
+                    f"CATEGORY: Other/Unknown Image\n"
+                    f"SUMMARY: User uploaded an image that is not a glucose meter or food.\n"
+                    f"DETAILS: {description}"
                 )
             }
