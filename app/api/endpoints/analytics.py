@@ -205,6 +205,9 @@ async def get_glucose_summary(
         values = [r.value for r in readings]
         unit = readings[0].unit
         
+        # Get latest reading (most recent)
+        latest_reading = max(readings, key=lambda r: r.taken_at)
+        
         return {
             "user_id": user_id,
             "period_days": days,
@@ -212,6 +215,8 @@ async def get_glucose_summary(
             "average_value": round(sum(values) / len(values), 2),
             "min_value": round(min(values), 2),
             "max_value": round(max(values), 2),
+            "latest_value": round(latest_reading.value, 2),
+            "latest_taken_at": latest_reading.taken_at.isoformat(),
             "unit": unit
         }
         

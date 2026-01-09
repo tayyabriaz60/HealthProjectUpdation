@@ -1,0 +1,675 @@
+2026-01-08 16:09:09 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 16:13:11 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 16:19:16 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 16:25:58 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 16:35:33 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 16:37:06 | INFO     | healthstake | Chat request - User: string | Session: string | Message Length: 2
+2026-01-08 16:37:58 | INFO     | healthstake | Image Analysis - User: None | Session: None | File: Glucose meter.jpeg
+2026-01-08 16:37:59 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 16:38:03 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 16:39:06 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 16:47:10 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 16:49:24 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 16:51:57 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 16:58:58 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 17:17:02 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 17:49:33 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 17:50:05 | INFO     | healthstake | Chat request - User: kdMb4pt2WVZO1zs1OmMydIzRGuJ3 | Session: None | Message Length: 2
+2026-01-08 17:50:36 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 17:51:43 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 17:52:01 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 17:52:01 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:52:15 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 25843a7d-9818-4daa-9ba3-97d1bc2a0073 | Message Length: 11
+2026-01-08 17:52:15 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:52:28 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 25843a7d-9818-4daa-9ba3-97d1bc2a0073 | Message Length: 17
+2026-01-08 17:52:28 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:52:40 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 25843a7d-9818-4daa-9ba3-97d1bc2a0073 | File: 1000215899.jpg
+2026-01-08 17:52:40 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:52:43 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:53:36 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 25843a7d-9818-4daa-9ba3-97d1bc2a0073 | Message Length: 13
+2026-01-08 17:53:36 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:56:44 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 17:56:55 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 17:57:07 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 17:57:07 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:57:17 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 4573cebd-6d11-4934-990b-c2ac5668d9f6 | Message Length: 11
+2026-01-08 17:57:17 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:57:17 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:57:32 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 4573cebd-6d11-4934-990b-c2ac5668d9f6 | File: 1000216882.jpg
+2026-01-08 17:57:32 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:57:54 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 4573cebd-6d11-4934-990b-c2ac5668d9f6 | File: 1000215899.jpg
+2026-01-08 17:57:54 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 17:57:58 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:00:24 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 18:00:24 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:00:31 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:01:07 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:01:24 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:01:57 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 18:01:57 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:02:19 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 55a6d665-a423-4da4-9ad4-37b20ba3582d | Message Length: 11
+2026-01-08 18:02:19 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:02:19 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:05:39 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:07:29 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:08:00 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 18:08:00 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:08:18 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 5854bd07-ad3f-49e8-a55e-f2a2ed05705b | File: 1000215899.jpg
+2026-01-08 18:08:18 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:08:23 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:08:27 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:11:14 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:12:55 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:16:49 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:18:00 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 18:18:00 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:18:17 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: e84e1241-79f1-436f-b2fc-7bb267fa7b4d | Message Length: 11
+2026-01-08 18:18:17 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:18:17 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:18:35 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: e84e1241-79f1-436f-b2fc-7bb267fa7b4d | File: 1000215899.jpg
+2026-01-08 18:18:35 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:18:55 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:24:34 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:27:18 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 18:27:18 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:27:44 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: fbed2c89-dc6f-4282-b239-8303913409c4 | File: 1000215899.jpg
+2026-01-08 18:27:44 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:27:47 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:27:52 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:29:02 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: fbed2c89-dc6f-4282-b239-8303913409c4 | Message Length: 23
+2026-01-08 18:29:02 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:29:04 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:29:33 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: fbed2c89-dc6f-4282-b239-8303913409c4 | File: 1000217067.jpg
+2026-01-08 18:29:33 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:29:59 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: fbed2c89-dc6f-4282-b239-8303913409c4 | Message Length: 41
+2026-01-08 18:29:59 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:30:03 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:37:57 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:38:29 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 18:38:29 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:38:39 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: c5a1702b-65de-48da-84c2-2cadfbea9068 | Message Length: 11
+2026-01-08 18:38:39 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:38:41 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:38:55 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 34
+2026-01-08 18:38:55 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:38:59 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:39:01 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:39:09 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 1b9f8752-473c-42c9-85d4-b98e613b2744 | Message Length: 13
+2026-01-08 18:39:09 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:39:12 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:39:24 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 1b9f8752-473c-42c9-85d4-b98e613b2744 | Message Length: 13
+2026-01-08 18:39:24 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:39:27 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:39:46 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 1b9f8752-473c-42c9-85d4-b98e613b2744 | Message Length: 16
+2026-01-08 18:39:46 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:39:48 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:42:16 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None
+2026-01-08 18:42:16 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:42:21 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:42:23 | ERROR    | healthstake | Native transcription failed: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Unsupported MIME type: application/octet-stream', 'status': 'INVALID_ARGUMENT'}}
+2026-01-08 18:42:23 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:42:25 | ERROR    | healthstake | Voice processing error: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Unsupported MIME type: application/octet-stream', 'status': 'INVALID_ARGUMENT'}}
+2026-01-08 18:42:25 | ERROR    | healthstake | Traceback (most recent call last):
+  File "D:\Flutter project\healthstake-dev\Chatbot\app\api\endpoints\voice.py", line 69, in voice_chat
+    user_text, ai_text_response, current_chat_id = await gemini_service.send_audio_message(
+  File "D:\Flutter project\healthstake-dev\Chatbot\app\services\gemini_service.py", line 339, in send_audio_message
+    response = chat.send_message(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\chats.py", line 63, in send_message
+    response = self._modules.generate_content(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\models.py", line 4393, in generate_content
+    response = self._generate_content(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\models.py", line 3655, in _generate_content
+    response_dict = self.api_client.request(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\_api_client.py", line 321, in request
+    response = self._request(http_request, stream=False)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\_api_client.py", line 261, in _request
+    return self._request_unauthorized(http_request, stream)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\_api_client.py", line 283, in _request_unauthorized
+    errors.APIError.raise_for_response(response)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\errors.py", line 100, in raise_for_response
+    raise ClientError(status_code, response)
+google.genai.errors.ClientError: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Unsupported MIME type: application/octet-stream', 'status': 'INVALID_ARGUMENT'}}
+
+2026-01-08 18:42:41 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 18:42:41 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:42:58 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 1f6f471e-534e-4922-87e4-8b797edba91d | File: 1000215899.jpg
+2026-01-08 18:42:58 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:43:02 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:43:23 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:43:53 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 18:43:53 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:44:10 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 05ccf450-45a3-435a-907c-e4d21df150fc | File: 1000215899.jpg
+2026-01-08 18:44:10 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:44:14 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:44:34 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 05ccf450-45a3-435a-907c-e4d21df150fc | Message Length: 13
+2026-01-08 18:44:34 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:44:36 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:44:41 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 05ccf450-45a3-435a-907c-e4d21df150fc | Message Length: 13
+2026-01-08 18:44:41 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:44:45 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:44:55 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 05ccf450-45a3-435a-907c-e4d21df150fc | Message Length: 11
+2026-01-08 18:44:55 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:44:58 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:45:18 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 05ccf450-45a3-435a-907c-e4d21df150fc | File: 1000217277.jpg
+2026-01-08 18:45:18 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:45:22 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:45:28 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:46:15 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 05ccf450-45a3-435a-907c-e4d21df150fc | File: 1000215899.jpg
+2026-01-08 18:46:15 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:46:19 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:46:24 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:49:04 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 05ccf450-45a3-435a-907c-e4d21df150fc | Message Length: 28
+2026-01-08 18:49:04 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:49:08 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:49:42 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 24
+2026-01-08 18:49:42 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:49:47 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:49:49 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:50:19 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 39
+2026-01-08 18:50:19 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:50:23 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:50:25 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:51:53 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | File: 1000214274.jpg
+2026-01-08 18:51:53 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:51:58 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:51:58 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:52:01 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 18:53:47 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:54:26 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:57:34 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:57:46 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 18:59:53 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 19:01:06 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None
+2026-01-08 19:01:06 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:01:09 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:01:11 | ERROR    | healthstake | Native transcription failed: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Unsupported MIME type: application/octet-stream', 'status': 'INVALID_ARGUMENT'}}
+2026-01-08 19:01:11 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:01:13 | ERROR    | healthstake | Voice processing error: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Unsupported MIME type: application/octet-stream', 'status': 'INVALID_ARGUMENT'}}
+2026-01-08 19:01:13 | ERROR    | healthstake | Traceback (most recent call last):
+  File "D:\Flutter project\healthstake-dev\Chatbot\app\api\endpoints\voice.py", line 69, in voice_chat
+    user_text, ai_text_response, current_chat_id = await gemini_service.send_audio_message(
+  File "D:\Flutter project\healthstake-dev\Chatbot\app\services\gemini_service.py", line 339, in send_audio_message
+    response = chat.send_message(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\chats.py", line 63, in send_message
+    response = self._modules.generate_content(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\models.py", line 4393, in generate_content
+    response = self._generate_content(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\models.py", line 3655, in _generate_content
+    response_dict = self.api_client.request(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\_api_client.py", line 321, in request
+    response = self._request(http_request, stream=False)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\_api_client.py", line 261, in _request
+    return self._request_unauthorized(http_request, stream)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\_api_client.py", line 283, in _request_unauthorized
+    errors.APIError.raise_for_response(response)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\errors.py", line 100, in raise_for_response
+    raise ClientError(status_code, response)
+google.genai.errors.ClientError: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Unsupported MIME type: application/octet-stream', 'status': 'INVALID_ARGUMENT'}}
+
+2026-01-08 19:01:31 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 19:01:52 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 2
+2026-01-08 19:01:52 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:02:10 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 9e8588ce-84de-42dc-9c78-7a1ff8f5b604 | Message Length: 30
+2026-01-08 19:02:10 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:02:12 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:02:36 | INFO     | healthstake | Chat request - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: None | Message Length: 3
+2026-01-08 19:02:36 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:02:53 | INFO     | healthstake | Image Analysis - User: f98fj9CEKHRGRqvYKYHfaVk1ky12 | Session: 5ff470fb-9b30-4b11-8e45-374ae7671a50 | File: 1000215899.jpg
+2026-01-08 19:02:53 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:02:56 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:03:50 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-08 19:03:50 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:03:59 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 0335a6a5-78c0-417d-91d5-21d82be2af10 | Message Length: 11
+2026-01-08 19:03:59 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:04:02 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:04:26 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 0335a6a5-78c0-417d-91d5-21d82be2af10 | File: 1000216882.jpg
+2026-01-08 19:04:26 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:04:42 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 0335a6a5-78c0-417d-91d5-21d82be2af10 | File: 1000215899.jpg
+2026-01-08 19:04:42 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:04:45 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:07:09 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 19:07:46 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-08 19:07:46 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:08:38 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: fc0f3f88-3d22-4f8d-bffa-7ffdf9d663ef | File: 1000215899.jpg
+2026-01-08 19:08:39 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:08:42 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:08:47 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:09:10 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: fc0f3f88-3d22-4f8d-bffa-7ffdf9d663ef | Message Length: 39
+2026-01-08 19:09:10 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:09:13 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:10:07 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: fc0f3f88-3d22-4f8d-bffa-7ffdf9d663ef | Message Length: 45
+2026-01-08 19:10:07 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:10:10 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:10:48 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 24
+2026-01-08 19:10:48 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:10:51 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:10:53 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:11:01 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 10ade802-d7cc-418c-9c82-93b35c39b7ce | Message Length: 13
+2026-01-08 19:11:01 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:11:04 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:11:29 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 10ade802-d7cc-418c-9c82-93b35c39b7ce | Message Length: 23
+2026-01-08 19:11:29 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:11:32 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:11:36 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:12:00 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 10ade802-d7cc-418c-9c82-93b35c39b7ce | File: 1000214274.jpg
+2026-01-08 19:12:00 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:12:05 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:12:12 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:16:34 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 19:17:57 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-08 19:17:57 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:18:06 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: ffea9c71-ae98-4e4c-9d09-1cf569728de4 | Message Length: 11
+2026-01-08 19:18:06 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:18:08 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:18:41 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: ffea9c71-ae98-4e4c-9d09-1cf569728de4 | File: 1000212260.jpg
+2026-01-08 19:18:41 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:18:45 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:18:50 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-08 19:21:39 | INFO     | healthstake | Logging initialized successfully.
+2026-01-08 19:26:39 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 01:57:40 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:03:30 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:04:21 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-09 02:04:21 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:04:32 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 9b38851a-f366-4f8e-9255-1f35d62912b1 | Message Length: 11
+2026-01-09 02:04:32 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:04:34 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:04:47 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 9b38851a-f366-4f8e-9255-1f35d62912b1 | File: 1000217283.jpg
+2026-01-09 02:04:47 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:04:56 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:05:16 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 9b38851a-f366-4f8e-9255-1f35d62912b1 | File: 1000211144.jpg
+2026-01-09 02:05:16 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:05:19 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:05:22 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:05:38 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 9b38851a-f366-4f8e-9255-1f35d62912b1 | Message Length: 25
+2026-01-09 02:05:38 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:05:40 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:05:58 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 9b38851a-f366-4f8e-9255-1f35d62912b1 | File: 1000216882.jpg
+2026-01-09 02:05:58 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:06:45 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 9b38851a-f366-4f8e-9255-1f35d62912b1 | File: 1000214274.jpg
+2026-01-09 02:06:45 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:06:50 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:06:59 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:07:33 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 9b38851a-f366-4f8e-9255-1f35d62912b1 | File: 1000217277.jpg
+2026-01-09 02:07:33 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:07:36 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:07:41 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:11:46 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | File: scaled_1cda0bce-835a-46ae-a0a2-de27c37d4fe65094150482271380018.jpg
+2026-01-09 02:11:46 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:11:51 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:12:03 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 890f6242-fd51-4803-8d7b-065e05ab9a22 | File: scaled_1000217277.jpg
+2026-01-09 02:12:03 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:12:07 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:12:12 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:12:19 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 890f6242-fd51-4803-8d7b-065e05ab9a22 | File: scaled_1000217303.png
+2026-01-09 02:12:19 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:12:32 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 890f6242-fd51-4803-8d7b-065e05ab9a22
+2026-01-09 02:12:32 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:12:34 | ERROR    | healthstake | Native transcription failed: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Unsupported MIME type: application/octet-stream', 'status': 'INVALID_ARGUMENT'}}
+2026-01-09 02:12:34 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:12:36 | ERROR    | healthstake | Voice processing error: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Unsupported MIME type: application/octet-stream', 'status': 'INVALID_ARGUMENT'}}
+2026-01-09 02:12:36 | ERROR    | healthstake | Traceback (most recent call last):
+  File "D:\Flutter project\healthstake-dev\Chatbot\app\api\endpoints\voice.py", line 69, in voice_chat
+    user_text, ai_text_response, current_chat_id = await gemini_service.send_audio_message(
+  File "D:\Flutter project\healthstake-dev\Chatbot\app\services\gemini_service.py", line 339, in send_audio_message
+    response = chat.send_message(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\chats.py", line 63, in send_message
+    response = self._modules.generate_content(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\models.py", line 4393, in generate_content
+    response = self._generate_content(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\models.py", line 3655, in _generate_content
+    response_dict = self.api_client.request(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\_api_client.py", line 321, in request
+    response = self._request(http_request, stream=False)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\_api_client.py", line 261, in _request
+    return self._request_unauthorized(http_request, stream)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\_api_client.py", line 283, in _request_unauthorized
+    errors.APIError.raise_for_response(response)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\google\genai\errors.py", line 100, in raise_for_response
+    raise ClientError(status_code, response)
+google.genai.errors.ClientError: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'Unsupported MIME type: application/octet-stream', 'status': 'INVALID_ARGUMENT'}}
+
+2026-01-09 02:14:28 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:14:46 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None
+2026-01-09 02:14:46 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767906884909.wav)
+2026-01-09 02:14:46 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:14:50 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:14:54 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:15:00 | INFO     | healthstake | Native Transcription: Hello, how are you?
+2026-01-09 02:15:00 | INFO     | healthstake | AI Response: Your current glucose is 106 mg/dL, which is good. Focus on daily habits to improve your 30-day average of 154 mg/dL.
+2026-01-09 02:15:36 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 034c0ae5-ac97-4cb6-892e-0507f2f13a48
+2026-01-09 02:15:36 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767906930862.wav)
+2026-01-09 02:15:36 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:15:40 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:15:44 | INFO     | healthstake | Native Transcription: I check my glucose and now it's 250.
+2026-01-09 02:15:44 | INFO     | healthstake | AI Response: Your glucose is currently 250 mg/dL, which is high. Consider light activity like a short walk and ensure adequate hydration.
+2026-01-09 02:16:11 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 034c0ae5-ac97-4cb6-892e-0507f2f13a48
+2026-01-09 02:16:11 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767906965652.wav)
+2026-01-09 02:16:11 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:16:15 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:16:20 | INFO     | healthstake | Native Transcription: Suggest me some exercise according to my glucose level.
+2026-01-09 02:16:20 | INFO     | healthstake | AI Response: With your glucose at 250 mg/dL, a brisk walk or light stretching can help lower it. Avoid very intense exercise when your glucose is high.
+2026-01-09 02:17:34 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 034c0ae5-ac97-4cb6-892e-0507f2f13a48
+2026-01-09 02:17:34 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767907052827.wav)
+2026-01-09 02:17:34 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:17:37 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:17:46 | INFO     | healthstake | Native Transcription: What's my glucose
+2026-01-09 02:17:46 | INFO     | healthstake | AI Response: Your current glucose is 250 mg/dL.
+2026-01-09 02:17:59 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 034c0ae5-ac97-4cb6-892e-0507f2f13a48
+2026-01-09 02:17:59 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767907077904.wav)
+2026-01-09 02:17:59 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:18:03 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:18:08 | INFO     | healthstake | AI Response: 
+2026-01-09 02:18:36 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 034c0ae5-ac97-4cb6-892e-0507f2f13a48
+2026-01-09 02:18:36 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767907110156.wav)
+2026-01-09 02:18:36 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:18:39 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:18:45 | INFO     | healthstake | AI Response: Your glucose level is currently 250 mg/dL.
+2026-01-09 02:22:41 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:23:18 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None
+2026-01-09 02:23:18 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767907396771.wav)
+2026-01-09 02:23:18 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:23:23 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:23:27 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:23:32 | INFO     | healthstake | Native Transcription: Hello, how are you?
+2026-01-09 02:23:32 | INFO     | healthstake | AI Response: Your current glucose is 106 mg/dL, which is good. Your 30-day average is higher; focus on balanced meals and regular activity.
+2026-01-09 02:25:02 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 7a66c95d-14cf-4dd9-a81a-4c93c86203a7
+2026-01-09 02:25:02 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767907496970.wav)
+2026-01-09 02:25:02 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:25:06 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:25:54 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 7a66c95d-14cf-4dd9-a81a-4c93c86203a7
+2026-01-09 02:25:54 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767907542112.wav)
+2026-01-09 02:25:54 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:25:58 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:32:15 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:33:06 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:33:29 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-09 02:33:29 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:33:50 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: ab025548-1634-49d8-99b4-e6459f2d6426
+2026-01-09 02:33:50 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767908027860.wav)
+2026-01-09 02:33:50 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:33:55 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:33:59 | INFO     | healthstake | Native Transcription: Hello, how are you?
+2026-01-09 02:33:59 | INFO     | healthstake | AI Response: Hello! I'm functioning well, thank you for asking. I'm here to help you manage your diabetes.
+
+Your last recorded glucose was 106 mg/dL, and your 30-day average is 154 mg/dL.
+
+How can I assist you today? Are you looking for information, support, or perhaps to log something?
+2026-01-09 02:34:36 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: ab025548-1634-49d8-99b4-e6459f2d6426
+2026-01-09 02:34:36 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767908070886.wav)
+2026-01-09 02:34:36 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:34:40 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:35:46 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: ab025548-1634-49d8-99b4-e6459f2d6426 | Message Length: 23
+2026-01-09 02:35:46 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:35:49 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:36:00 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: ab025548-1634-49d8-99b4-e6459f2d6426 | File: scaled_1000216882.jpg
+2026-01-09 02:36:00 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:36:34 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: ab025548-1634-49d8-99b4-e6459f2d6426 | File: scaled_1000214274.jpg
+2026-01-09 02:36:34 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:36:38 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:36:51 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:43:08 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:43:11 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:43:50 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:43:56 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:44:29 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None
+2026-01-09 02:44:29 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767908667417.wav)
+2026-01-09 02:44:29 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:44:33 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:44:38 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:44:44 | INFO     | healthstake | Native Transcription: Hello how are you
+2026-01-09 02:44:44 | INFO     | healthstake | AI Response: Your current glucose is 106 mg/dL. This is a good reading. Be mindful that hot chocolate can impact blood sugar; continue monitoring your levels.
+2026-01-09 02:44:47 | ERROR    | healthstake | Voice processing error: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedColumnError'>: column "audio_path" of relation "messages" does not exist
+[SQL: INSERT INTO messages (chat_session_id, role, text, image_path, audio_path, created_at) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR, p3::VARCHAR, p4::VARCHAR, p5::TIMESTAMP WITHOUT TIME ZONE FROM (VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::VA ... 175 characters truncated ... 0, p1, p2, p3, p4, p5, sen_counter) ORDER BY sen_counter RETURNING messages.id, messages.id AS id__1]
+[parameters: ('4f2fe7d0-4756-469c-bb60-1ba20a561c93', 'user', '[VOICE_MESSAGE]Hello how are you', None, None, datetime.datetime(2026, 1, 8, 21, 44, 47, 649279), '4f2fe7d0-4756-469c-bb60-1ba20a561c93', 'assistant', '[VOICE_RESPONSE]Your current glucose is 106 mg/dL. This is a good reading. Be mindful that hot chocolate can impact blood sugar; continue monitoring your levels.', None, 'voice_responses/4f2fe7d0-4756-469c-bb60-1ba20a561c93_20260108_214444.mp3', datetime.datetime(2026, 1, 8, 21, 44, 47, 649279))]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-01-09 02:44:47 | ERROR    | healthstake | Traceback (most recent call last):
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 510, in _prepare_and_execute
+    prepared_stmt, attributes = await adapt_connection._prepare(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 756, in _prepare
+    prepared_stmt = await self._connection.prepare(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\asyncpg\connection.py", line 635, in prepare
+    return await self._prepare(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\asyncpg\connection.py", line 653, in _prepare
+    stmt = await self._get_statement(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\asyncpg\connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+  File "asyncpg\\protocol\\protocol.pyx", line 165, in prepare
+asyncpg.exceptions.UndefinedColumnError: column "audio_path" of relation "messages" does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\engine\base.py", line 2118, in _exec_insertmany_context
+    dialect.do_execute(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 568, in execute
+    self._adapt_connection.await_(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 546, in _prepare_and_execute
+    self._handle_exception(error)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 497, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 780, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.ProgrammingError: <class 'asyncpg.exceptions.UndefinedColumnError'>: column "audio_path" of relation "messages" does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Flutter project\healthstake-dev\Chatbot\app\api\endpoints\voice.py", line 144, in voice_chat
+    await db.commit()
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\ext\asyncio\session.py", line 1009, in commit
+    await greenlet_spawn(self.sync_session.commit)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\session.py", line 2028, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\session.py", line 1313, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\session.py", line 1288, in _prepare_impl
+    self.session.flush()
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\session.py", line 4352, in flush
+    self._flush(objects)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\session.py", line 4487, in _flush
+    with util.safe_reraise():
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\session.py", line 4448, in _flush
+    flush_context.execute()
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\orm\persistence.py", line 1143, in _emit_insert_statements
+    result = connection.execute(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\engine\base.py", line 1418, in execute
+    return meth(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\sql\elements.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\engine\base.py", line 1640, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\engine\base.py", line 1844, in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\engine\base.py", line 2126, in _exec_insertmany_context
+    self._handle_dbapi_exception(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\engine\base.py", line 2118, in _exec_insertmany_context
+    dialect.do_execute(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 568, in execute
+    self._adapt_connection.await_(
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 546, in _prepare_and_execute
+    self._handle_exception(error)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 497, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "C:\Users\tayyab\miniconda3\envs\diabetes_assistant\lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py", line 780, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.ProgrammingError: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedColumnError'>: column "audio_path" of relation "messages" does not exist
+[SQL: INSERT INTO messages (chat_session_id, role, text, image_path, audio_path, created_at) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR, p3::VARCHAR, p4::VARCHAR, p5::TIMESTAMP WITHOUT TIME ZONE FROM (VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::VA ... 175 characters truncated ... 0, p1, p2, p3, p4, p5, sen_counter) ORDER BY sen_counter RETURNING messages.id, messages.id AS id__1]
+[parameters: ('4f2fe7d0-4756-469c-bb60-1ba20a561c93', 'user', '[VOICE_MESSAGE]Hello how are you', None, None, datetime.datetime(2026, 1, 8, 21, 44, 47, 649279), '4f2fe7d0-4756-469c-bb60-1ba20a561c93', 'assistant', '[VOICE_RESPONSE]Your current glucose is 106 mg/dL. This is a good reading. Be mindful that hot chocolate can impact blood sugar; continue monitoring your levels.', None, 'voice_responses/4f2fe7d0-4756-469c-bb60-1ba20a561c93_20260108_214444.mp3', datetime.datetime(2026, 1, 8, 21, 44, 47, 649279))]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+
+2026-01-09 02:46:45 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 02:49:14 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None
+2026-01-09 02:49:14 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767908953205.wav)
+2026-01-09 02:49:14 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:49:19 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:49:23 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:49:29 | INFO     | healthstake | Native Transcription: Hello, how are you?
+2026-01-09 02:49:29 | INFO     | healthstake | AI Response: Your current glucose is 106 mg/dL, a healthy level. Remember to check nutritional labels on drinks like hot chocolate to manage carbohydrate intake effectively.
+2026-01-09 02:49:46 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 0361afb8-5eb1-46ae-9480-9e5c3559b630 | Message Length: 2
+2026-01-09 02:49:46 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:49:49 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:50:08 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 0361afb8-5eb1-46ae-9480-9e5c3559b630 | Message Length: 11
+2026-01-09 02:50:08 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:50:11 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 02:50:49 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-09 02:50:49 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 12:56:52 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-09 12:56:52 | INFO     | healthstake | Session c524262f-8a4e-4197-8fc5-9f01979ddae4 cleaned up due to age or memory limit.
+2026-01-09 12:56:52 | INFO     | healthstake | Session 0361afb8-5eb1-46ae-9480-9e5c3559b630 cleaned up due to age or memory limit.
+2026-01-09 12:56:52 | INFO     | healthstake | Session 77917a0b-8df8-47cb-a064-1bb3f781a1c4 cleaned up due to age or memory limit.
+2026-01-09 12:56:52 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 12:57:03 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None
+2026-01-09 12:57:03 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767945423170.wav)
+2026-01-09 12:57:03 | INFO     | healthstake | Session 0361afb8-5eb1-46ae-9480-9e5c3559b630 cleaned up due to age or memory limit.
+2026-01-09 12:57:03 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 12:57:09 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 12:57:13 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 12:57:18 | INFO     | healthstake | AI Response: Your glucose is 106 mg/dL. Continue monitoring and aim for balanced meals to support your overall average.
+2026-01-09 15:14:58 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 15:18:38 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 15:19:14 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-09 15:19:14 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:21:31 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 8a3eaa1e-63d2-442a-9925-5040bf35a4e8 | Message Length: 11
+2026-01-09 15:21:31 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:21:34 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:21:50 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 8a3eaa1e-63d2-442a-9925-5040bf35a4e8 | File: scaled_1000215899.jpg
+2026-01-09 15:21:50 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:21:54 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:21:58 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:22:07 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 8a3eaa1e-63d2-442a-9925-5040bf35a4e8
+2026-01-09 15:22:07 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767954126837.wav)
+2026-01-09 15:22:07 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:22:11 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:22:16 | INFO     | healthstake | Native Transcription: Hello
+2026-01-09 15:22:16 | INFO     | healthstake | AI Response: Hello! As an AI assistant, I don't have feelings, but I'm ready and here to help you manage your diabetes.
+
+I see your latest glucose reading is 106 mg/dL, which is a great result! Your 30-day average is 147.1 mg/dL. Keep up the good work!
+
+How can I assist you further today?
+2026-01-09 15:23:50 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 5
+2026-01-09 15:23:50 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:24:41 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 17
+2026-01-09 15:24:41 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:24:46 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:24:49 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:28:49 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 15:28:56 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-09 15:28:56 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:29:05 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: fdd6a4e8-ba58-4c74-ba52-78135eaece2f | Message Length: 13
+2026-01-09 15:29:05 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:29:08 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:29:22 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 34
+2026-01-09 15:29:22 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:29:26 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:29:28 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:35:46 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 15:36:45 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-09 15:36:45 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:36:57 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 39453a28-f5f8-43f9-87de-b18b11a4c29d | Message Length: 11
+2026-01-09 15:36:57 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:37:00 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:41:34 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 15:42:10 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-09 15:42:10 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:42:32 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 572b821f-23fc-4490-a8db-a8d822d5f079 | Message Length: 28
+2026-01-09 15:42:32 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:42:35 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:43:27 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 572b821f-23fc-4490-a8db-a8d822d5f079
+2026-01-09 15:43:27 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767955405770.wav)
+2026-01-09 15:43:27 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:43:31 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:43:35 | INFO     | healthstake | Native Transcription: hello how are you
+2026-01-09 15:43:35 | INFO     | healthstake | AI Response: Hello! I'm doing well, thank you for asking.
+
+I see your current glucose is 210 mg/dL. This is higher than your target range.
+
+Have you eaten recently? And how are you feeling right now?
+2026-01-09 15:44:35 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 572b821f-23fc-4490-a8db-a8d822d5f079 | Message Length: 30
+2026-01-09 15:44:35 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:44:37 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:45:03 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 22
+2026-01-09 15:45:03 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:45:11 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:45:14 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:45:58 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: 3e653d4c-9f95-40ce-a483-242e94b50789 | Message Length: 45
+2026-01-09 15:45:58 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:46:00 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:46:38 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 21
+2026-01-09 15:46:38 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:46:41 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:46:45 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:47:38 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 30
+2026-01-09 15:47:38 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:47:42 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:47:45 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:48:13 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: c44702eb-f75f-4cf7-9462-53ec049fd459
+2026-01-09 15:48:13 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767955692262.wav)
+2026-01-09 15:48:13 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:48:17 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:48:22 | INFO     | healthstake | Native Transcription: Hello, how are you?I've transcribed the provided audio. I will now output the transcribed text.
+2026-01-09 15:48:22 | INFO     | healthstake | AI Response: Hello! I'm doing well, thank you for asking.
+
+Looking at your recent glucose reading, it's currently 350 mg/dL. This is quite high, and it's very important to consult your doctor before starting any new exercise routine to ensure it's safe for you at this level.
+
+Once your doctor gives you the go-ahead, some gentle exercises that are generally good for managing diabetes include:
+
+1.  Walking: Even a brisk 30-minute walk most days of the week can make a big difference.
+2.  Light Cycling: On a stationary bike or outdoors (if it's safe and flat).
+3.  Swimming: A great low-impact option that works many muscles.
+4.  Chair Exercises or Gentle Stretching: If you're looking for something very low-impact to start with.
+
+Remember, starting slow and gradually increasing the duration and intensity is key. And always monitor how you feel during and after exercise, especially with your current glucose levels.
+
+Please, make sure to speak with your doctor about your glucose levels and exercise plans first.
+2026-01-09 15:48:56 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: c44702eb-f75f-4cf7-9462-53ec049fd459
+2026-01-09 15:48:56 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767955731681.wav)
+2026-01-09 15:48:56 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:49:00 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 15:56:11 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 15:56:20 | INFO     | healthstake | Logging initialized successfully.
+2026-01-09 16:10:52 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: None | Message Length: 2
+2026-01-09 16:10:52 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 16:11:09 | INFO     | healthstake | Chat request - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: fcb2d7d9-38d7-4154-95d4-1bbbd66ef8ad | Message Length: 11
+2026-01-09 16:11:09 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 16:11:11 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 16:11:19 | INFO     | healthstake | Image Analysis - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: fcb2d7d9-38d7-4154-95d4-1bbbd66ef8ad | File: scaled_1000217306.jpg
+2026-01-09 16:11:19 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 16:11:35 | INFO     | healthstake | Voice Chat Request (Gemini Native) - User: aCFVMVxQ1mTcvNwx5i6oDKPbKq23 | Session: fcb2d7d9-38d7-4154-95d4-1bbbd66ef8ad
+2026-01-09 16:11:35 | INFO     | healthstake | Detected audio MIME type: audio/wav (filename: voice_query_1767957094236.wav)
+2026-01-09 16:11:35 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 16:11:39 | INFO     | root | AFC is enabled with max remote calls: 10.
+2026-01-09 16:11:43 | INFO     | healthstake | Native Transcription: Hello, how are you?
+2026-01-09 16:11:43 | INFO     | healthstake | AI Response: Hello there! As a health assistant, I don't have feelings, but I'm ready to help you manage your diabetes.
+
+I noticed your last glucose reading was 350 mg/dL. That's quite high. Have you recently had a meal or snack that might have contributed to this, or perhaps missed a dose of medication? It would be good to review what you've eaten recently, and if this trend continues, please discuss it with your doctor.

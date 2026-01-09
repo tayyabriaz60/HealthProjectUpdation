@@ -10,7 +10,9 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, UploadFile, File, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging_config import logger
 from app.services.gemini_service import GeminiService
+from app.services.health_service import HealthService
 from app.core.config import BASE_DIR
 from app.db import get_db
 from app.models import ChatSession, Message, GlucoseReading, FoodEvent
@@ -69,6 +71,7 @@ async def ai_analyze_image(
     - If the image is food, returns meal info, calories, and diabetes-friendly recommendation.
     Stores the image on disk and persists user+assistant messages in the database.
     """
+    logger.info(f"Image Analysis - User: {user_id} | Session: {chat_id} | File: {image.filename}")
     try:
         # Validate content type
         content_type = image.content_type
@@ -90,42 +93,9 @@ async def ai_analyze_image(
         
         # Auto-fetch latest AND average glucose reading if health_context is missing and user_id is provided
         if not health_context and user_id:
-            from sqlalchemy import select, func
-            from app.models import GlucoseReading as GRModel
-            from datetime import datetime, timedelta
-            
-            # 1. Latest Reading
-            stmt = (
-                select(GRModel)
-                .where(GRModel.user_id == user_id)
-                .order_by(GRModel.taken_at.desc())
-                .limit(1)
-            )
-            res = await db.execute(stmt)
-            latest = res.scalar_one_or_none()
-            
-            context_parts = []
-            if latest:
-                context_parts.append(f"Latest glucose reading: {latest.value} {latest.unit} at {latest.taken_at}.")
-                
-                # 2. Average Reading (only if we have a latest reading to know the unit)
-                thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-                avg_stmt = (
-                    select(func.avg(GRModel.value))
-                    .where(
-                        GRModel.user_id == user_id,
-                        GRModel.taken_at >= thirty_days_ago
-                    )
-                )
-                avg_res = await db.execute(avg_stmt)
-                avg_val = avg_res.scalar()
-                
-                if avg_val:
-                    context_parts.append(f"Average glucose (last 30 days): {avg_val:.1f} {latest.unit}.")
-            
-            if context_parts:
-                health_context = " ".join(context_parts)
-                print(f"DEBUG: Health Context for Food Analysis: {health_context}") # Debug logging
+            health_context = await HealthService.get_patient_context_string(db, user_id)
+            if health_context:
+                print(f"DEBUG: Health Context for Image Analysis: {health_context}")
 
         result = gemini_service.analyze_image_auto(
             image_data=data,
@@ -138,13 +108,23 @@ async def ai_analyze_image(
         chat_id = session.id
 
         # Restore Gemini session memory from DB history to ensure continuity
-        from sqlalchemy import select
-        from app.models import Message as MsgModel
-        stmt = select(MsgModel).where(MsgModel.chat_session_id == chat_id).order_by(MsgModel.created_at.asc())
-        res = await db.execute(stmt)
-        db_messages = res.scalars().all()
-        if db_messages:
-            await gemini_service.restore_session_from_db(chat_id, db_messages)
+        # ensure_session returns the same chat_id if session exists, or creates a new one
+        # But we need to ensure the new chat_id is also in the database
+        new_chat_id = await gemini_service.ensure_session(chat_id, db)
+        
+        # If ensure_session created a new session, we need to create it in DB too
+        if new_chat_id != chat_id:
+            # Check if new_chat_id exists in DB
+            existing_session = await db.get(ChatSession, new_chat_id)
+            if not existing_session:
+                # Create the new session in DB
+                new_session = ChatSession(
+                    id=new_chat_id,
+                    user_id=user_id
+                )
+                db.add(new_session)
+                await db.flush()
+            chat_id = new_chat_id
 
         assistant_text = ""
         context_description = "" # For AI memory

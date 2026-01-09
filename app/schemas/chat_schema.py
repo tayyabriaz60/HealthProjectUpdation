@@ -36,6 +36,14 @@ class MessageHistory(BaseModel):
         None,
         description="Optional relative image path if this message is associated with an image",
     )
+    audio_path: Optional[str] = Field(
+        None,
+        description="Optional audio path for voice messages",
+    )
+    is_voice: Optional[bool] = Field(
+        False,
+        description="Whether this message is a voice message",
+    )
 
 
 class ChatHistoryResponse(BaseModel):

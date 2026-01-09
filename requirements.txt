@@ -12,3 +12,6 @@ SQLAlchemy[asyncio]==2.0.36
 asyncpg==0.30.0
 pydub==0.25.1
 pandas
+openai-whisper
+edge-tts
+ffmpeg-python

@@ -6,12 +6,14 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging_config import logger
 from app.schemas.chat_schema import (
     ChatRequest,
     MessageHistory,
     UnifiedChatResponse
 )
 from app.services.gemini_service import GeminiService
+from app.services.health_service import HealthService
 from app.db import get_db
 from app.models import ChatSession, Message
 
@@ -56,6 +58,8 @@ async def unified_chat_endpoint(
     # Treat empty/short greetings as a request for the canned intro to avoid model calls
     normalized = request.message.strip().lower()
     wants_greeting = (not request.chat_id) and normalized in {"", "hi", "hello", "hey"}
+    
+    logger.info(f"Chat request - User: {request.user_id} | Session: {request.chat_id} | Message Length: {len(request.message)}")
     
     if stream:
         # STREAMING MODE - History always included at the end
@@ -190,14 +194,7 @@ async def unified_chat_endpoint(
                 gemini_service = get_gemini_service()
 
                 # Ensure session exists and is restored if needed
-                if request.chat_id:
-                     from sqlalchemy import select
-                     from app.models import Message as MsgModel
-                     stmt = select(MsgModel).where(MsgModel.chat_session_id == request.chat_id).order_by(MsgModel.created_at.asc())
-                     res = await db.execute(stmt)
-                     db_messages = res.scalars().all()
-                     if db_messages:
-                         await gemini_service.restore_session_from_db(request.chat_id, db_messages)
+                chat_id = await gemini_service.ensure_session(request.chat_id, db)
 
                 # Fetch context: Latest Glucose, Average Glucose, AND Recent Food
                 latest_glucose_info = ""
@@ -215,6 +212,7 @@ async def unified_chat_endpoint(
 
                 # 1. EXTRACT MANUAL DATA (Glucose/Food) from user message
                 extracted_data = gemini_service.extract_health_data_from_text(request.message)
+                print(f"DEBUG: Extracted health data: {extracted_data}")  # Debug log
                 
                 # We can't attach state to the Pydantic model 'request' directly.
                 # Instead, we'll use local variables to hold the pending DB objects.
@@ -227,118 +225,49 @@ async def unified_chat_endpoint(
 
                 if extracted_data.get("type") == "glucose":
                     data = extracted_data.get("data", {})
-                    if data.get("value") and data.get("unit"):
-                        glucose_to_save = GlucoseReading(
-                            user_id=request.user_id,
-                            chat_session_id=current_chat_id, # Use a valid ID
-                            value=float(data["value"]),
-                            unit=data["unit"],
-                            taken_at=datetime.utcnow()
-                        )
+                    print(f"DEBUG: Glucose data extracted: {data}")  # Debug log
+                    # Ensure data is a dict and has required fields
+                    if isinstance(data, dict) and data.get("value") and data.get("unit"):
+                        # Ensure unit is a string
+                        unit = str(data["unit"]).strip()
+                        if unit in ["mg/dL", "mmol/L"]:
+                            glucose_to_save = GlucoseReading(
+                                user_id=request.user_id,
+                                chat_session_id=current_chat_id, # Use a valid ID
+                                value=float(data["value"]),
+                                unit=unit,
+                                taken_at=datetime.utcnow()
+                            )
+                            print(f"DEBUG: Created GlucoseReading: value={glucose_to_save.value}, unit={glucose_to_save.unit}, user_id={glucose_to_save.user_id}")  # Debug log
+                        else:
+                            print(f"DEBUG: Invalid unit: {unit}")  # Debug log
+                    else:
+                        print(f"DEBUG: Missing required fields in glucose data: {data}")  # Debug log
 
                 elif extracted_data.get("type") == "food":
                     data = extracted_data.get("data", {})
-                    if data.get("meal_name"):
+                    # Ensure data is a dict and has required fields
+                    if isinstance(data, dict) and data.get("meal_name"):
                          food_to_save = FoodEvent(
                             user_id=request.user_id,
                             chat_session_id=current_chat_id, # Use a valid ID
-                            meal_name=data["meal_name"],
+                            meal_name=str(data["meal_name"]),
                             calories=data.get("calories"),
                             carbs_g=data.get("carbs_g"),
                             created_at=datetime.utcnow()
                         )
                 
                 # Fetch context: Latest Glucose, Average Glucose, AND Recent Food
-                avg_glucose_info = ""
-                recent_food_info = ""
-                
-                if request.user_id:
-                    from app.models import GlucoseReading, FoodEvent
-                    from sqlalchemy import select, func
-                    from datetime import datetime, timedelta
-                    
-                    # 1. Fetch Latest Glucose Reading
-                    stmt = (
-                        select(GlucoseReading)
-                        .where(GlucoseReading.user_id == request.user_id)
-                        .order_by(GlucoseReading.taken_at.desc())
-                        .limit(1)
-                    )
-                    result = await db.execute(stmt)
-                    latest_reading = result.scalar_one_or_none()
-                    
-                    if latest_reading:
-                        latest_glucose_info = (
-                            f"Latest glucose reading: {latest_reading.value} {latest_reading.unit} "
-                            f"at {latest_reading.taken_at}."
-                        )
-
-                    # 2. Fetch Average Glucose (Last 30 days)
-                    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-                    avg_stmt = (
-                        select(func.avg(GlucoseReading.value))
-                        .where(
-                            GlucoseReading.user_id == request.user_id,
-                            GlucoseReading.taken_at >= thirty_days_ago
-                        )
-                    )
-                    avg_result = await db.execute(avg_stmt)
-                    avg_value = avg_result.scalar()
-                    
-                    if avg_value:
-                        unit = latest_reading.unit if latest_reading else "mg/dL"
-                        avg_glucose_info = f"Average glucose (last 30 days): {avg_value:.1f} {unit}."
-
-                    # 3. Fetch Recent Food History (Last 3 meals)
-                    food_stmt = (
-                        select(FoodEvent)
-                        .where(FoodEvent.user_id == request.user_id)
-                        .order_by(FoodEvent.created_at.desc())
-                        .limit(3)
-                    )
-                    food_result = await db.execute(food_stmt)
-                    recent_meals = food_result.scalars().all()
-                    
-                    if recent_meals:
-                        meal_details = []
-                        for meal in recent_meals:
-                            details = f"- {meal.meal_name}"
-                            if meal.calories:
-                                details += f" ({meal.calories} kcal)"
-                            if meal.carbs_g:
-                                details += f", {meal.carbs_g}g carbs"
-                            meal_details.append(details)
-                        
-                        recent_food_info = (
-                            "Recent meals logged:\n" + "\n".join(meal_details)
-                        )
-
-                # Construct Context String
-                context_parts = []
-                if latest_glucose_info:
-                    context_parts.append(latest_glucose_info)
-                if avg_glucose_info:
-                    context_parts.append(avg_glucose_info)
-                if recent_food_info:
-                    context_parts.append(recent_food_info)
-                
                 full_context_str = ""
-                if context_parts:
-                    joined_parts = "\n".join(context_parts)
-                    full_context_str = (
-                        "\n\n[System Context: The user's recent health data is provided below. "
-                        "This is invisible to the user but critical for your personalization. "
-                        "ALWAYS use this data to tailor your advice. "
-                        "If the user asks about food, consider their recent meals and glucose trends.\n\n"
-                        f"{joined_parts}\n]"
-                    )
+                if request.user_id:
+                    full_context_str = await HealthService.get_patient_context_string(db, request.user_id)
 
                 # Append context to the message (hidden from user history, but visible to model)
                 message_with_context = request.message + full_context_str
 
                 response_text, chat_id = await gemini_service.send_message(
                     message=message_with_context,
-                    chat_id=request.chat_id
+                    chat_id=chat_id
                 )
             except Exception as e:
                 # Log send_message error
@@ -370,13 +299,16 @@ async def unified_chat_endpoint(
                     # Ensure session ID is set if it wasn't before
                     glucose_to_save.chat_session_id = chat_id
                     db.add(glucose_to_save)
+                    print(f"DEBUG: Saving glucose reading to DB: value={glucose_to_save.value}, unit={glucose_to_save.unit}, user_id={glucose_to_save.user_id}")  # Debug log
                 
                 if food_to_save:
                     food_to_save.message_id = asst_msg_obj.id
                     food_to_save.chat_session_id = chat_id
                     db.add(food_to_save)
+                    print(f"DEBUG: Saving food event to DB: meal={food_to_save.meal_name}")  # Debug log
 
                 await db.commit()
+                print(f"DEBUG: Database commit successful")  # Debug log
 
             # Build response
             response_data = {
@@ -550,11 +482,50 @@ async def get_chat_history(
     result = await db.execute(stmt)
     messages = result.scalars().all()
     
-    history = [
-        MessageHistory(role=msg.role, text=msg.text, image_path=msg.image_path)
-        for msg in messages
-        if "[IMAGE_MEMORY]" not in msg.text and "IMAGE_ANALYSIS_CONTEXT" not in msg.text
-    ]
+    history = []
+    for msg in messages:
+        # Skip internal system messages
+        if "[IMAGE_MEMORY]" in msg.text or "IMAGE_ANALYSIS_CONTEXT" in msg.text:
+            continue
+        
+        # Extract text and detect voice messages
+        text = msg.text
+        is_voice = False
+        audio_path = None
+        
+        # Check if it's a voice message
+        if text.startswith("[VOICE_MESSAGE]"):
+            text = text.replace("[VOICE_MESSAGE]", "").strip()
+            is_voice = True
+        elif text.startswith("[VOICE_RESPONSE]"):
+            # Extract audio path from text if present
+            if "[AUDIO_PATH:" in text:
+                # Extract audio path: [VOICE_RESPONSE]text[AUDIO_PATH:path]
+                parts = text.split("[AUDIO_PATH:")
+                text = parts[0].replace("[VOICE_RESPONSE]", "").strip()
+                if len(parts) > 1:
+                    audio_path_str = parts[1].rstrip("]")
+                    audio_path = f"/media/{audio_path_str}"
+            else:
+                text = text.replace("[VOICE_RESPONSE]", "").strip()
+            is_voice = True
+        
+        # Also check for old format "[Voice Message: ...]"
+        if "[Voice Message:" in text:
+            text = text.replace("[Voice Message:", "").replace("]", "").strip()
+            is_voice = True
+        
+        # Fallback: Check if audio_path column exists (for future compatibility)
+        if hasattr(msg, 'audio_path') and msg.audio_path:
+            audio_path = f"/media/{msg.audio_path}"
+        
+        history.append(MessageHistory(
+            role=msg.role, 
+            text=text, 
+            image_path=msg.image_path,
+            audio_path=audio_path,
+            is_voice=is_voice  # Add voice flag
+        ))
     
     return {
         "chat_id": chat_id,

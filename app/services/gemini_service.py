@@ -4,7 +4,9 @@ Handles all interactions with Google's Gemini API using the latest SDK with chat
 """
 from google import genai
 from app.core.config import settings
+from app.core.logging_config import logger
 from typing import Dict, Optional, Any
+from datetime import datetime
 import uuid
 import re
 
@@ -13,6 +15,38 @@ try:
 except Exception:
     genai_types = None
 
+from pydantic import BaseModel, Field
+from typing import List, Optional, Literal
+
+# --- STRUCTURED OUTPUT SCHEMAS ---
+
+class GlucoseData(BaseModel):
+    value: float
+    unit: Literal["mg/dL", "mmol/L"]
+
+class FoodData(BaseModel):
+    meal_name: str
+    calories: Optional[int] = None
+    carbs_g: Optional[int] = None
+
+class HealthDataExtraction(BaseModel):
+    type: Literal["glucose", "food", "none"]
+    data: Optional[dict] = None # Will hold either GlucoseData or FoodData structure
+
+class GlucoseImageAnalysis(BaseModel):
+    value: float
+    unit: Literal["mg/dL", "mmol/L"]
+    analysis: str = Field(..., description="3-4 sentences of empathetic professional analysis")
+
+class FoodImageAnalysis(BaseModel):
+    meal_name: str
+    calories: Optional[int] = None
+    carbs_g: Optional[int] = None
+    recommendation_level: Literal["YES", "CAREFUL", "NO"]
+    recommendation_text: str = Field(..., description="2-3 lines of plain text advice")
+
+class ImageClassification(BaseModel):
+    classification: Literal["GLUCOSE", "FOOD", "OTHER"]
 
 class GeminiService:
     """
@@ -30,83 +64,120 @@ class GeminiService:
         self.model_name = settings.GEMINI_MODEL_NAME
         self.system_prompt = settings.SYSTEM_PROMPT
         
-        # Store active chat sessions in memory
-        # In production, consider using Redis or a database
+        # Store active chat sessions in memory with usage tracking
         self.chat_sessions: Dict[str, Any] = {}
+        self._session_last_used: Dict[str, datetime] = {}
         self._session_flags: Dict[str, Dict[str, bool]] = {}
     
+    def _cleanup_old_sessions(self, max_age_minutes: int = 60, max_sessions: int = 100):
+        """
+        Remove sessions that are too old or when memory limit is reached.
+        Helps maintain server performance.
+        """
+        now = datetime.utcnow()
+        # 1. Remove by age
+        to_delete = [
+            cid for cid, last_used in self._session_last_used.items()
+            if (now - last_used).total_seconds() > max_age_minutes * 60
+        ]
+        
+        # 2. If still too many sessions, remove oldest by last_used
+        if len(self.chat_sessions) - len(to_delete) > max_sessions:
+            sorted_sessions = sorted(self._session_last_used.items(), key=lambda x: x[1])
+            num_more_to_delete = len(self.chat_sessions) - len(to_delete) - max_sessions
+            for i in range(num_more_to_delete):
+                to_delete.append(sorted_sessions[i][0])
+
+        for cid in set(to_delete):
+            self.delete_chat_session(cid)
+            if cid in self._session_last_used:
+                del self._session_last_used[cid]
+            logger.info(f"Session {cid} cleaned up due to age or memory limit.")
+
     def create_chat_session(self, model_name: Optional[str] = None, history: Optional[list] = None) -> str:
         """
         Create a new chat session with diabetes health assistant system prompt.
-        
-        Args:
-            model_name: Optional model name (uses default if not provided)
-            history: Optional initial history to load into the session
-            
-        Returns:
-            Unique chat session ID
         """
+        self._cleanup_old_sessions()
+        
         model = model_name or self.model_name
         
-        # Create chat with system instruction for diabetes health assistant
+        # Create chat with system instruction
         system_prompt_applied = False
         try:
-            # Try to use system_instruction parameter if available in SDK
             chat = self.client.chats.create(
                 model=model,
                 system_instruction=self.system_prompt,
-                history=history # Load history if provided
+                history=history
             )
             system_prompt_applied = True
-        except (TypeError, AttributeError, Exception) as e:
-            print(f"Fallback session creation due to: {e}")
-            # Fallback: Create chat without system_instruction
+        except Exception as e:
+            print(f"Fallback session creation: {e}")
             chat = self.client.chats.create(model=model, history=history)
             if not history:
-                # Send system instruction as first message only if no history exists
                 try:
-                    chat.send_message(f"Please act as a diabetes health assistant. Follow these guidelines:\n\n{self.system_prompt}")
+                    chat.send_message(f"Act as a diabetes health assistant: {self.system_prompt}")
                     system_prompt_applied = True
-                except Exception:
-                    pass
+                except: pass
         
-        # Generate unique session ID
         chat_id = str(uuid.uuid4())
-        
-        # Store the chat session
         self.chat_sessions[chat_id] = chat
-        # Store a flag to know if system prompt was applied
-        if not hasattr(self, '_session_flags'):
-            self._session_flags = {}
+        self._session_last_used[chat_id] = datetime.utcnow()
         self._session_flags[chat_id] = {'system_prompt_applied': system_prompt_applied}
         
         return chat_id
 
-    async def restore_session_from_db(self, chat_id: str, db_messages: list) -> str:
+    async def ensure_session(self, chat_id: Optional[str], db: Any) -> str:
+        """
+        Ensures a session exists. If chat_id is provided but not in memory, 
+        it restores it from the database history.
+        """
+        if not chat_id:
+            return self.create_chat_session()
+
+        # If already in memory, update last_used and return
+        if chat_id in self.chat_sessions:
+            self._session_last_used[chat_id] = datetime.utcnow()
+            return chat_id
+
+        # Not in memory -> Restore from DB
+        from sqlalchemy import select
+        from app.models import Message as MsgModel
+        
+        stmt = select(MsgModel).where(MsgModel.chat_session_id == chat_id).order_by(MsgModel.created_at.asc())
+        res = await db.execute(stmt)
+        db_messages = res.scalars().all()
+
+        if db_messages:
+            return await self.restore_session_from_db(chat_id, db_messages)
+        
+        # If no DB history found, create a fresh one
+        return self.create_chat_session()
+
+    async def restore_session_from_db(self, chat_id: str, db_messages: list, limit: int = 15) -> str:
         """
         Restores a Gemini chat session object using messages from the database.
-        Returns the chat_id.
+        Limit is applied to keep the token usage low and focus on recent context.
         """
-        # CRITICAL FIX: Always remove existing in-memory session to force a rebuild from DB.
-        # This ensures that any new messages added to DB (like image context) are picked up.
+        # Always remove existing in-memory session to force a fresh rebuild
         if chat_id in self.chat_sessions:
             del self.chat_sessions[chat_id]
             if chat_id in self._session_flags:
                 del self._session_flags[chat_id]
             
-        # Convert DB messages to Gemini SDK format
+        # Convert DB messages to Gemini SDK format, but only the last 'limit' messages
+        # We take the last N messages to keep the session concise
+        recent_messages = db_messages[-limit:] if len(db_messages) > limit else db_messages
+
         formatted_history = []
-        print(f"DEBUG: Restoring session {chat_id} with {len(db_messages)} messages from DB")
-        for msg in db_messages:
+        for msg in recent_messages:
             role = "user" if msg.role == "user" else "model"
-            # Explicitly log content to verify image context is being loaded
-            if "IMAGE_ANALYSIS_CONTEXT" in msg.text:
-                print(f"DEBUG: Found IMAGE_ANALYSIS_CONTEXT in DB message: {msg.text[:50]}...")
-            
+            # Skip empty messages or technical markers that shouldn't be in history
+            if not msg.text or msg.text == "[Image Uploaded]":
+                continue
             formatted_history.append({"role": role, "parts": [{"text": msg.text}]})
             
         # Create a new session with this history
-        # Note: We keep the same chat_id to maintain consistency
         new_chat_id = self.create_chat_session(history=formatted_history)
         
         # Swap the generated ID with the existing one in memory
@@ -114,7 +185,7 @@ class GeminiService:
         self.chat_sessions[chat_id] = session_obj
         
         return chat_id
-    
+
     def get_chat_session(self, chat_id: str):
         """
         Get an existing chat session.
@@ -132,6 +203,69 @@ class GeminiService:
             raise ValueError(f"Chat session {chat_id} not found")
         
         return self.chat_sessions[chat_id]
+    
+    def _extract_json_from_text(self, text: str) -> str:
+        """
+        Extracts JSON from text that might be wrapped in markdown code blocks or have extra text.
+        Handles cases like: "Here is the JSON:\n```json\n{...}\n```" or "```\n{...}\n```"
+        """
+        import re
+        import json
+        
+        if not text:
+            return ""
+        
+        # Remove any leading text before JSON (like "Here is the JSON:")
+        # Find the first occurrence of { which should be the start of JSON
+        first_brace = text.find('{')
+        if first_brace > 0:
+            text = text[first_brace:]
+        
+        # Try to find JSON in code blocks first (most common case)
+        json_block_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', text, re.DOTALL)
+        if json_block_match:
+            candidate = json_block_match.group(1).strip()
+            # Validate it's valid JSON
+            try:
+                json.loads(candidate)
+                return candidate
+            except:
+                pass
+        
+        # Try to find JSON object directly (starts with { and ends with })
+        # Use non-greedy match first, then greedy if that fails
+        json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', text, re.DOTALL)
+        if not json_match:
+            # Fallback to greedy match
+            json_match = re.search(r'\{.*\}', text, re.DOTALL)
+        
+        if json_match:
+            candidate = json_match.group(0).strip()
+            # Validate it's valid JSON
+            try:
+                json.loads(candidate)
+                return candidate
+            except:
+                # Try to find balanced braces
+                brace_count = 0
+                start_idx = candidate.find('{')
+                if start_idx >= 0:
+                    for i in range(start_idx, len(candidate)):
+                        if candidate[i] == '{':
+                            brace_count += 1
+                        elif candidate[i] == '}':
+                            brace_count -= 1
+                            if brace_count == 0:
+                                balanced = candidate[start_idx:i+1]
+                                try:
+                                    json.loads(balanced)
+                                    return balanced
+                                except:
+                                    pass
+                                break
+        
+        # If no JSON found, return original text (might be plain JSON)
+        return text.strip()
     
     @staticmethod
     def _clean_response_text(text: str) -> str:
@@ -159,6 +293,71 @@ class GeminiService:
         text = re.sub(r'\n{3,}', '\n\n', text)
         
         return text.strip()
+
+    async def send_audio_message(
+        self, 
+        audio_data: bytes, 
+        mime_type: str, 
+        chat_id: Optional[str] = None, 
+        health_context: Optional[str] = None
+    ) -> tuple[str, str, str]:
+        """
+        Send an audio file to Gemini for native processing (STT + Response).
+        Returns a tuple of (transcribed_user_text, ai_response_text, chat_id).
+        """
+        # Ensure session exists
+        if chat_id:
+            try:
+                chat = self.get_chat_session(chat_id)
+            except ValueError:
+                chat_id = self.create_chat_session()
+                chat = self.chat_sessions[chat_id]
+        else:
+            chat_id = self.create_chat_session()
+            chat = self.chat_sessions[chat_id]
+
+        # 1. Transcribe the audio first (Internal call to get user text for DB logging)
+        audio_part = genai_types.Part.from_bytes(data=audio_data, mime_type=mime_type)
+        
+        # Multilingual transcription - detect any language
+        transcribe_prompt = (
+            "Transcribe this audio exactly as spoken in the original language. "
+            "Preserve the language (Urdu, English, Arabic, etc.). "
+            "Return ONLY the transcribed text, nothing else."
+        )
+        try:
+            trans_resp = self.client.models.generate_content(
+                model=self.model_name,
+                contents=[audio_part, transcribe_prompt]
+            )
+            user_text = trans_resp.text.strip()
+        except Exception as e:
+            logger.error(f"Native transcription failed: {e}")
+            user_text = "Audio Message" # Fallback
+
+        # 2. Get the actual health assistant response
+        # We inject the health context and the audio part
+        context_block = f"\n\n[SYSTEM CONTEXT: {health_context}]" if health_context else ""
+        
+        # Multilingual response prompt - respond in the same language as the user
+        multilingual_prompt = (
+            f"Please respond to this audio message as a diabetes assistant. "
+            f"IMPORTANT: Detect the language spoken in the audio and respond in the SAME language. "
+            f"If the user speaks Urdu (or any language using Urdu/Arabic script), respond in Urdu. "
+            f"If English, respond in English. Match their language exactly. "
+            f"DO NOT respond in Hindi. Always prefer Urdu over Hindi. {context_block}"
+        )
+        
+        # We use the chat session to maintain history
+        # Note: Generation config is controlled via system prompt
+        response = chat.send_message(
+            [audio_part, multilingual_prompt]
+        )
+        
+        clean_ai_text = self._clean_response_text(response.text)
+        self._session_last_used[chat_id] = datetime.utcnow()
+        
+        return user_text, clean_ai_text, chat_id
 
     async def send_message(self, message: str, chat_id: Optional[str] = None, retry_count: int = 2) -> tuple[str, str]:
         """
@@ -237,6 +436,7 @@ class GeminiService:
 
                 # Send message - SDK automatically includes full conversation history
                 # System prompt is already applied during session creation
+                # Note: Generation config (max_output_tokens, temperature) is controlled via system prompt
                 response = chat.send_message(message)
                 
                 # Clean response (strip markdown)
@@ -405,64 +605,113 @@ class GeminiService:
     def extract_health_data_from_text(self, text: str) -> dict:
         """
         Analyze user text to extract health data (glucose readings or food logs).
-        Returns a dict with type ("glucose", "food", or "none") and the extracted data.
+        Uses Gemini JSON mode for reliable extraction.
         """
         prompt = (
-            "Analyze the following user message for health data. "
-            "If the user is reporting a glucose level (e.g., 'my sugar is 120', 'glucose 5.5'), extract it.\n"
-            "If the user is reporting a meal (e.g., 'I ate a burger', 'had oatmeal for breakfast'), extract it.\n"
-            "Return ONLY a JSON object with this structure (no markdown):\n"
-            "{\n"
-            '  "type": "glucose" | "food" | "none",\n'
-            '  "data": {\n'
-            '    // If glucose:\n'
-            '    "value": <number>,\n'
-            '    "unit": "mg/dL" | "mmol/L",\n'
-            '    // If food:\n'
-            '    "meal_name": "<name>",\n'
-            '    "calories": <estimated_number>,\n'
-            '    "carbs_g": <estimated_number>\n'
-            '  }\n'
-            "}\n"
-            f"User Message: {text}"
+            "Analyze the following user message for health data. Return ONLY valid JSON.\n"
+            "Rules:\n"
+            "1. If the user mentions a glucose/sugar level (e.g., 'my sugar is 120', 'glucose 5.5', 'I checked my glucose and it's 250', 'blood sugar 180'), extract it.\n"
+            "2. If no unit is mentioned, assume 'mg/dL' for values > 10, or 'mmol/L' for values <= 10.\n"
+            "3. If the user is reporting a meal (e.g., 'I ate a burger', 'had oatmeal'), extract it.\n"
+            "4. Return JSON with structure: {\"type\": \"glucose\"|\"food\"|\"none\", \"data\": {...}}\n"
+            "5. For glucose: {\"type\": \"glucose\", \"data\": {\"value\": number, \"unit\": \"mg/dL\"|\"mmol/L\"}}\n"
+            "6. For food: {\"type\": \"food\", \"data\": {\"meal_name\": string, \"calories\": number|null, \"carbs_g\": number|null}}\n"
+            "7. If no health data found: {\"type\": \"none\", \"data\": {}}\n"
+            f"User Message: {text}\n"
+            "IMPORTANT: Return ONLY the JSON object, no explanatory text."
         )
 
         try:
+            # Try without response_schema first (more reliable)
             response = self.client.models.generate_content(
                 model=self.model_name,
-                contents=prompt
+                contents=prompt,
+                config={
+                    'response_mime_type': 'application/json',
+                }
             )
             
-            response_text = getattr(response, "text", "") or "{}"
-            
-            # Clean up potential markdown code blocks
-            if "```json" in response_text:
-                response_text = response_text.split("```json")[1].split("```")[0].strip()
-            elif "```" in response_text:
-                response_text = response_text.split("```")[1].split("```")[0].strip()
-                
+            # Extract JSON manually
             import json
-            return json.loads(response_text)
+            json_text = self._extract_json_from_text(response.text)
+            parsed = json.loads(json_text)
+            
+            # Ensure the structure matches HealthDataExtraction
+            # Handle case where response might have different structure
+            if not isinstance(parsed, dict):
+                return {"type": "none", "data": {}}
+            
+            # Normalize the response structure
+            result = {
+                "type": parsed.get("type", "none"),
+                "data": parsed.get("data", {})
+            }
+            
+            # If type is directly in parsed but not in expected format
+            if "type" not in result or result["type"] not in ["glucose", "food", "none"]:
+                # Try to infer type from data structure
+                glucose_value = parsed.get("value") or parsed.get("blood_glucose_value") or parsed.get("glucose_value") or parsed.get("glucose")
+                if glucose_value is not None:
+                    result["type"] = "glucose"
+                    # Auto-detect unit if not provided: > 10 = mg/dL, <= 10 = mmol/L
+                    unit = parsed.get("unit", "mg/dL")
+                    if not unit or unit not in ["mg/dL", "mmol/L"]:
+                        glucose_val = float(glucose_value) if glucose_value else 0
+                        unit = "mmol/L" if glucose_val <= 10 else "mg/dL"
+                    result["data"] = {
+                        "value": float(glucose_value),
+                        "unit": unit
+                    }
+                elif "meal_name" in parsed or parsed.get("type") == "food":
+                    result["type"] = "food"
+                    result["data"] = {
+                        "meal_name": parsed.get("meal_name", "Unidentified Meal"),
+                        "calories": parsed.get("calories"),
+                        "carbs_g": parsed.get("carbs_g")
+                    }
+                else:
+                    result["type"] = "none"
+                    result["data"] = {}
+            
+            # Validate glucose data structure
+            if result["type"] == "glucose" and result.get("data"):
+                data = result["data"]
+                if not isinstance(data, dict):
+                    result["data"] = {}
+                    result["type"] = "none"
+                elif "value" not in data or not data.get("value"):
+                    result["type"] = "none"
+                    result["data"] = {}
+                else:
+                    # Ensure unit is set
+                    if "unit" not in data or data["unit"] not in ["mg/dL", "mmol/L"]:
+                        glucose_val = float(data["value"])
+                        data["unit"] = "mmol/L" if glucose_val <= 10 else "mg/dL"
+            
+            return result
         except Exception as e:
             print(f"Error extracting health data: {e}")
+            import traceback
+            print(traceback.format_exc())
             return {"type": "none", "data": {}}
 
     def analyze_glucose_image(self, image_data: bytes, mime_type: Optional[str] = None) -> dict:
         """
         Analyze a glucose meter image and return parsed value, unit, and brief analysis.
-        Uses the same Gemini client (multimodal) as the text chat.
+        Uses Gemini JSON mode for structured multimodal output.
         """
         if not image_data:
             raise ValueError("Image file is empty")
         if genai_types is None:
             raise RuntimeError("google.genai.types not available for image handling")
 
-        # Build multimodal prompt with image
         prompt = (
-            "Read the blood glucose value from this image (it could be a photo of a meter or a screenshot of an app).\n"
-            'Respond ONLY with the number and unit in this exact format: "VALUE UNIT"\n'
-            'Examples: "125 mg/dL" or "6.9 mmol/L"\n'
-            'If you cannot read it clearly, respond with "Unable to read"'
+            "Analyze this glucose meter image and return ONLY valid JSON. "
+            "1. Read the blood glucose numerical value and the unit (mg/dL or mmol/L) from this image.\n"
+            "2. If the image is a meter, look for the largest numbers on the screen.\n"
+            "3. Provide a 2-sentence empathetic analysis based on the reading.\n"
+            "Safety: If reading <70 mg/dL or <3.9 mmol/L, emphasize fast-acting carbs immediately.\n"
+            "IMPORTANT: Return ONLY the JSON object, no explanatory text before or after."
         )
 
         image_part = genai_types.Part.from_bytes(
@@ -470,86 +719,154 @@ class GeminiService:
             mime_type=mime_type or "image/png"
         )
 
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=[{"role": "user", "parts": [{"text": prompt}, image_part]}]
-        )
-
-        reading_text = getattr(response, "text", "") or ""
-        if "unable" in reading_text.lower() or "cannot" in reading_text.lower():
-            raise ValueError("Unable to read glucose meter from image")
-
-        match = re.search(r"(\d+\.?\d*)\s*(mg/dL|mmol/L)", reading_text, re.IGNORECASE)
-        if not match:
-            raise ValueError(f"Could not parse glucose value from: {reading_text}")
-
-        value = float(match.group(1))
-        unit = match.group(2)
-
-        analysis_prompt = (
-            f"The patient has a glucose reading of {value} {unit}.\n"
-            "Provide a brief health analysis (3-4 sentences):\n"
-            "1. Is this reading normal, high, or low?\n"
-            "2. What should the patient do next?\n"
-            "3. Any immediate concerns?\n"
-            "Be empathetic and professional."
-        )
-
-        analysis_resp = self.client.models.generate_content(
-            model=self.model_name,
-            contents=[analysis_prompt]
-        )
-        analysis_text = getattr(analysis_resp, "text", "") or ""
-        analysis_text = self._clean_response_text(analysis_text) # Force clean
-
-        return {
-            "value": value,
-            "unit": unit,
-            "analysis": analysis_text,
-            "raw_response": reading_text
-        }
+        import json
+        
+        # Try without response_schema first (more reliable)
+        # response_schema sometimes causes issues where Gemini returns text but no JSON
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=[{"role": "user", "parts": [{"text": prompt}, image_part]}],
+                config={
+                    'response_mime_type': 'application/json',
+                    'max_output_tokens': 500,  # Increased to ensure full JSON response
+                }
+            )
+        except Exception as e:
+            print(f"Error generating content: {e}")
+            raise ValueError(f"Failed to get response from Gemini: {str(e)}")
+        
+        # Manual fallback - extract JSON from markdown/text if needed
+        try:
+            # Check if response has multiple parts or candidates
+            response_text = response.text if hasattr(response, 'text') else str(response)
+            
+            # Debug: Print full response to understand structure
+            print(f"DEBUG: Full response text length: {len(response_text)}")
+            print(f"DEBUG: Full response text: {response_text}")
+            
+            # Check if response was truncated
+            if hasattr(response, 'candidates') and response.candidates:
+                for candidate in response.candidates:
+                    if hasattr(candidate, 'finish_reason'):
+                        print(f"DEBUG: Finish reason: {candidate.finish_reason}")
+                    if hasattr(candidate, 'safety_ratings'):
+                        print(f"DEBUG: Safety ratings: {candidate.safety_ratings}")
+            
+            # Try to extract JSON
+            json_text = self._extract_json_from_text(response_text)
+            
+            # If extraction failed, check if there's JSON in response parts
+            if not json_text or not json_text.strip().startswith('{'):
+                # Check if response has parts attribute
+                if hasattr(response, 'candidates') and response.candidates:
+                    for candidate in response.candidates:
+                        if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                            for part in candidate.content.parts:
+                                if hasattr(part, 'text'):
+                                    json_text = self._extract_json_from_text(part.text)
+                                    if json_text and json_text.strip().startswith('{'):
+                                        break
+                        if json_text and json_text.strip().startswith('{'):
+                            break
+                
+                # If still no JSON, try to find it in the raw response string
+                if not json_text or not json_text.strip().startswith('{'):
+                    # Look for JSON pattern more aggressively
+                    import re
+                    json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
+                    matches = re.findall(json_pattern, response_text, re.DOTALL)
+                    for match in matches:
+                        try:
+                            test_parsed = json.loads(match)
+                            if "value" in test_parsed and "unit" in test_parsed:
+                                json_text = match
+                                break
+                        except:
+                            continue
+            
+            # Validate JSON before parsing
+            if not json_text or not json_text.strip().startswith('{'):
+                raise ValueError(f"Invalid JSON response from Gemini. Response: {response_text[:500]}")
+            
+            parsed = json.loads(json_text)
+            
+            # Handle different field name variations from Gemini
+            # Gemini might return: "value", "blood_glucose_value", "glucose_value", etc.
+            glucose_value = None
+            if "value" in parsed:
+                glucose_value = parsed["value"]
+            elif "blood_glucose_value" in parsed:
+                glucose_value = parsed["blood_glucose_value"]
+            elif "glucose_value" in parsed:
+                glucose_value = parsed["glucose_value"]
+            elif "reading" in parsed:
+                glucose_value = parsed["reading"]
+            
+            # Handle unit field variations
+            unit = None
+            if "unit" in parsed:
+                unit = parsed["unit"]
+            elif "blood_glucose_unit" in parsed:
+                unit = parsed["blood_glucose_unit"]
+            elif "glucose_unit" in parsed:
+                unit = parsed["glucose_unit"]
+            
+            # Validate required fields
+            if glucose_value is None:
+                raise ValueError(f"Missing glucose value in JSON. Got fields: {list(parsed.keys())}")
+            
+            # Auto-detect unit if not provided
+            if not unit or unit not in ["mg/dL", "mmol/L"]:
+                glucose_val = float(glucose_value)
+                unit = "mmol/L" if glucose_val <= 10 else "mg/dL"
+            else:
+                unit = str(unit).strip()
+            
+            return {
+                "value": float(glucose_value),
+                "unit": unit,
+                "analysis": self._clean_response_text(parsed.get("analysis", "")),
+                "raw_response": response_text
+            }
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error in analyze_glucose_image: {e}")
+            print(f"Response text: {response.text[:500] if 'response' in locals() and hasattr(response, 'text') else 'N/A'}")
+            raise ValueError(f"Failed to parse JSON from Gemini response: {str(e)}")
+        except Exception as e:
+            print(f"Error in analyze_glucose_image: {e}")
+            import traceback
+            print(traceback.format_exc())
+            raise ValueError(f"Failed to analyze glucose image: {str(e)}")
 
     def analyze_food_image(self, image_data: bytes, mime_type: Optional[str] = None, health_context: Optional[str] = None) -> dict:
         """
         Analyze a food image and return meal name, estimated calories and recommendation.
-        
-        Args:
-            image_data: Image file bytes
-            mime_type: MIME type of the image (optional)
-            health_context: Optional health context (e.g., latest glucose reading)
-            
-        Returns:
-            Dictionary with meal_name, calories, recommendation, and raw_response
+        Uses Gemini JSON mode for reliable multimodal analysis.
         """
         if not image_data:
             raise ValueError("Image file is empty")
         if genai_types is None:
             raise RuntimeError("google.genai.types not available for image handling")
 
-        # Build context part if health context is provided
         context_part = f"\n\nPatient Health Context:\n{health_context}" if health_context else ""
 
-        # Build multimodal prompt with image
         prompt = (
-            "You are a diabetes nutrition assistant. Analyze this food image or screenshot and reply ONLY with JSON.\n"
-            "Return this JSON shape (no markdown, no extra text):\n"
+            "You are a diabetes nutrition assistant. Analyze this food image and return ONLY valid JSON.\n"
+            "Required JSON structure:\n"
             "{\n"
-            '  "meal_name": "<short name>",\n'
-            '  "calories": <number or null>,\n'
-            '  "recommendation_level": "YES" | "CAREFUL" | "NO",\n'
-            '  "recommendation_text": "<1-2 short sentences, concise, patient-friendly>",\n'
-            '  "carbs_g": <number or null>\n'
+            '  "meal_name": "name of the meal",\n'
+            '  "calories": number or null,\n'
+            '  "carbs_g": number or null,\n'
+            '  "recommendation_level": "YES" or "CAREFUL" or "NO",\n'
+            '  "recommendation_text": "2-3 line advice"\n'
             "}\n"
             "Rules:\n"
-            "- Keep it brief and readable for a patient.\n"
-            "- If unsure, set calories or carbs_g to null.\n"
-            "- recommendation_level must be exactly YES, CAREFUL, or NO.\n"
-            "- Do not include any extra fields or explanations.\n"
-            "- CRITICAL: Use the Patient Health Context (e.g. latest glucose) to determine the recommendation.\n"
-            "- If glucose is HIGH (>180), be stricter with carbs/sugar.\n"
-            "- If glucose is LOW (<70), suggest fast-acting carbs if appropriate.\n"
-            "- STRICTLY NO MARKDOWN in recommendation_text. No bold (**), no italics (*).\n"
-            "- Keep recommendation_text strictly between 2 to 3 lines."
+            "- meal_name: Simple name (e.g., 'Chicken Rice', 'Pasta', 'Salad')\n"
+            "- recommendation_level: YES (safe), CAREFUL (moderate), NO (avoid)\n"
+            "- Use Patient Health Context for recommendation (if glucose >180, be stricter)\n"
+            "- recommendation_text: 2-3 lines max, concise and friendly\n"
+            "IMPORTANT: Return ONLY the JSON object, no arrays, no nested objects, no explanatory text."
             f"{context_part}"
         )
 
@@ -558,62 +875,162 @@ class GeminiService:
             mime_type=mime_type or "image/png"
         )
 
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=[{"role": "user", "parts": [{"text": prompt}, image_part]}]
-        )
-
-        response_text = getattr(response, "text", "") or ""
-
-        meal_name = None
-        calories = None
-        recommendation_level = None
-        recommendation_text = None
-        carbs_g = None
-
-        # Try JSON parsing first
+        # Try without response_schema first (more reliable)
+        # response_schema causes issues with Optional fields
         try:
-            import json as _json
-            parsed = _json.loads(response_text)
-            meal_name = parsed.get("meal_name")
-            calories = parsed.get("calories")
-            recommendation_level = parsed.get("recommendation_level")
-            recommendation_text = parsed.get("recommendation_text")
-            carbs_g = parsed.get("carbs_g")
-        except Exception:
-            pass
-
-        # Fallback regex parsing for robustness
-        if not meal_name:
-            meal_match = re.search(r"meal_name[:=]\s*(.+?)(?:\n|$)", response_text, re.IGNORECASE)
-            if meal_match:
-                meal_name = meal_match.group(1).strip()
-        if not calories:
-            calories_match = re.search(r"calories[:=]\s*(\d+)", response_text, re.IGNORECASE)
-            if calories_match:
-                calories = int(calories_match.group(1))
-        if not recommendation_level:
-            rec_level_match = re.search(r"(YES|CAREFUL|NO)", response_text, re.IGNORECASE)
-            if rec_level_match:
-                recommendation_level = rec_level_match.group(1).upper()
-        if not recommendation_text:
-            rec_text_match = re.search(r"recommendation[_:\-]\s*(.+)", response_text, re.IGNORECASE | re.DOTALL)
-            if rec_text_match:
-                recommendation_text = rec_text_match.group(1).strip()
-
-        # Fallback defaults
-        meal_name = meal_name or "Unidentified Meal"
-        recommendation_level = (recommendation_level or "CAREFUL").upper()
-        recommendation_text = recommendation_text or "Recommendation not available."
-
-        return {
-            "meal_name": meal_name,
-            "calories": calories,
-            "recommendation_level": recommendation_level,
-            "recommendation_text": recommendation_text,
-            "carbs_g": carbs_g,
-            "raw_response": response_text
-        }
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=[{"role": "user", "parts": [{"text": prompt}, image_part]}],
+                config={
+                    'response_mime_type': 'application/json',
+                    # Removed max_output_tokens to allow full response (default is usually 8192)
+                }
+            )
+        except Exception as e:
+            print(f"Error generating content: {e}")
+            raise ValueError(f"Failed to get response from Gemini: {str(e)}")
+        
+        # Extract and parse JSON from response
+        try:
+            # Get response text - check multiple possible locations
+            response_text = ""
+            if hasattr(response, 'text'):
+                response_text = response.text
+            elif hasattr(response, 'candidates') and response.candidates:
+                # Try to get text from candidates
+                for candidate in response.candidates:
+                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                        for part in candidate.content.parts:
+                            if hasattr(part, 'text'):
+                                response_text += part.text + "\n"
+            
+            if not response_text:
+                raise ValueError("No text found in Gemini response")
+            
+            # Check if response was truncated
+            if hasattr(response, 'candidates') and response.candidates:
+                for candidate in response.candidates:
+                    if hasattr(candidate, 'finish_reason'):
+                        finish_reason = candidate.finish_reason
+                        print(f"DEBUG: Food image finish reason: {finish_reason}")
+                        if finish_reason and finish_reason != "STOP":
+                            print(f"WARNING: Response may be incomplete. Finish reason: {finish_reason}")
+            
+            print(f"DEBUG: Food image response text length: {len(response_text)}")
+            print(f"DEBUG: Food image response text: {response_text[:1000]}")
+            
+            # Try to extract JSON
+            import json
+            json_text = self._extract_json_from_text(response_text)
+            
+            # If extraction failed, try more aggressive search
+            if not json_text or not json_text.strip().startswith('{'):
+                # Look for JSON pattern more aggressively in the full response
+                import re
+                # Try to find any JSON-like structure
+                json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
+                matches = re.findall(json_pattern, response_text, re.DOTALL)
+                for match in reversed(matches):  # Try longest matches first
+                    try:
+                        test_parsed = json.loads(match)
+                        if "meal_name" in test_parsed or "recommendation_level" in test_parsed:
+                            json_text = match
+                            break
+                    except:
+                        continue
+            
+            # Validate JSON before parsing
+            if not json_text or not json_text.strip().startswith('{'):
+                # If JSON is incomplete (MAX_TOKENS), try to extract partial data
+                if response_text.strip().startswith('{'):
+                    # Try to extract partial JSON and complete it
+                    import re
+                    # Try to extract meal_name even if JSON is incomplete
+                    meal_name_match = re.search(r'"meal_name"\s*:\s*"([^"]*)', response_text)
+                    meal_name = meal_name_match.group(1) if meal_name_match else None
+                    
+                    # Try to extract other fields
+                    calories_match = re.search(r'"calories"\s*:\s*(\d+)', response_text)
+                    calories = int(calories_match.group(1)) if calories_match else None
+                    
+                    carbs_match = re.search(r'"carbs_g"\s*:\s*(\d+)', response_text)
+                    carbs_g = int(carbs_match.group(1)) if carbs_match else None
+                    
+                    rec_level_match = re.search(r'"recommendation_level"\s*:\s*"([^"]*)', response_text)
+                    rec_level = rec_level_match.group(1) if rec_level_match else "CAREFUL"
+                    
+                    # If we found at least meal_name, return partial data
+                    if meal_name:
+                        return {
+                            "meal_name": meal_name,
+                            "calories": calories,
+                            "carbs_g": carbs_g,
+                            "recommendation_level": rec_level if rec_level in ["YES", "CAREFUL", "NO"] else "CAREFUL",
+                            "recommendation_text": "Response was incomplete. Please try again for full analysis.",
+                            "raw_response": response_text
+                        }
+                    
+                    # Try to find the last complete JSON object
+                    json_objects = re.findall(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response_text, re.DOTALL)
+                    if json_objects:
+                        # Try the longest one
+                        for obj in reversed(sorted(json_objects, key=len)):
+                            try:
+                                test = json.loads(obj)
+                                if "meal_name" in test or "recommendation_level" in test:
+                                    json_text = obj
+                                    break
+                            except:
+                                continue
+                
+                if not json_text or not json_text.strip().startswith('{'):
+                    raise ValueError(f"Invalid JSON response from Gemini. Response: {response_text[:500]}")
+            
+            parsed = json.loads(json_text)
+            
+            # Validate required fields
+            if "meal_name" not in parsed and "recommendation_level" not in parsed:
+                # Check if it's a different structure (e.g., food_items array)
+                if "food_items" in parsed and isinstance(parsed["food_items"], list) and len(parsed["food_items"]) > 0:
+                    # Extract from first food item
+                    first_item = parsed["food_items"][0]
+                    parsed = {
+                        "meal_name": first_item.get("name") or first_item.get("meal_name") or "Unidentified Meal",
+                        "calories": first_item.get("calories"),
+                        "carbs_g": first_item.get("carbs_g") or first_item.get("carbs"),
+                        "recommendation_level": parsed.get("recommendation_level", "CAREFUL"),
+                        "recommendation_text": parsed.get("recommendation_text") or first_item.get("recommendation", "")
+                    }
+                else:
+                    raise ValueError(f"Missing required fields in JSON: {parsed}")
+            
+            return {
+                "meal_name": parsed.get("meal_name", "Unidentified Meal"),
+                "calories": parsed.get("calories"),  # Can be None
+                "carbs_g": parsed.get("carbs_g"),  # Can be None
+                "recommendation_level": parsed.get("recommendation_level", "CAREFUL"),
+                "recommendation_text": self._clean_response_text(parsed.get("recommendation_text", "")),
+                "raw_response": response_text
+            }
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error in analyze_food_image: {e}")
+            print(f"Response text: {response_text[:1000] if 'response_text' in locals() else 'N/A'}")
+            return {
+                "meal_name": "Unidentified Meal",
+                "recommendation_level": "CAREFUL",
+                "recommendation_text": "Could not analyze the image.",
+                "raw_response": str(e)
+            }
+        except Exception as e:
+            print(f"Error in analyze_food_image: {e}")
+            import traceback
+            print(traceback.format_exc())
+            return {
+                "meal_name": "Unidentified Meal",
+                "recommendation_level": "CAREFUL",
+                "recommendation_text": "Could not analyze the image.",
+                "raw_response": str(e)
+            }
 
     def analyze_general_image(self, image_data: bytes, mime_type: Optional[str] = None) -> dict:
         """
@@ -655,7 +1072,7 @@ class GeminiService:
     ) -> dict:
         """
         Auto-detect whether the image is a glucose meter, food, or something else.
-        Strictly rejects non-medical images.
+        Uses Gemini JSON mode for reliable classification.
         """
         if not image_data:
             raise ValueError("Image file is empty")
@@ -669,27 +1086,39 @@ class GeminiService:
 
         # Step 1: classify the image (glucose meter vs food vs other)
         classify_prompt = (
-            "Classify this image as exactly one of: GLUCOSE, FOOD, or OTHER.\n"
-            "- If it is a glucose meter display, or a screenshot of a medical app showing a glucose reading, answer: GLUCOSE\n"
-            "- If it is a food/meal, or a screenshot of a food logging app showing a meal, answer: FOOD\n"
-            "- If it is anything else, answer: OTHER\n"
-            "Reply with a single word only."
+            "Determine the category of this image for a diabetes health app.\n"
+            "- GLUCOSE: A blood glucose meter device (Glucometer), a continuous glucose monitor (CGM) sensor on skin, "
+            "or a mobile app screen showing blood sugar numbers (e.g., 120 mg/dL, 6.5 mmol/L).\n"
+            "- FOOD: Any edible meal, individual food item, beverage (except plain water), "
+            "or a food logging app screenshot showing a meal with calories.\n"
+            "- OTHER: Any image that is NOT a medical device, blood sugar reading, or food (e.g., people, pets, "
+            "landscapes, documents, cars, or generic household objects).\n\n"
+            "If the image is blurry or unidentifiable, choose OTHER."
         )
 
-        classify_resp = self.client.models.generate_content(
-            model=self.model_name,
-            contents=[{"role": "user", "parts": [{"text": classify_prompt}, image_part]}]
-        )
-        classify_text = (getattr(classify_resp, "text", "") or "").strip().upper()
+        try:
+            classify_resp = self.client.models.generate_content(
+                model=self.model_name,
+                contents=[{"role": "user", "parts": [{"text": classify_prompt}, image_part]}],
+                config={
+                    'response_mime_type': 'application/json',
+                    'response_schema': ImageClassification,
+                }
+            )
+            
+            classification = "OTHER"
+            if hasattr(classify_resp, 'parsed') and classify_resp.parsed:
+                classification = classify_resp.parsed.classification
+            else:
+                import json
+                classification = json.loads(classify_resp.text).get("classification", "OTHER")
 
-        classification = "other"
-        if "GLUCOSE" in classify_text:
-            classification = "glucose"
-        elif "FOOD" in classify_text:
-            classification = "food"
-        
+        except Exception as e:
+            print(f"Classification error: {e}")
+            classification = "OTHER"
+
         # Branch based on classification
-        if classification == "glucose":
+        if classification == "GLUCOSE":
             reading = self.analyze_glucose_image(
                 image_data=image_data,
                 mime_type=mime_type
@@ -699,7 +1128,6 @@ class GeminiService:
                 "reading": {"value": reading["value"], "unit": reading["unit"]},
                 "analysis": reading.get("analysis"),
                 "raw_response": reading.get("raw_response"),
-                # Generic Memory Summary
                 "memory_summary": (
                     f"CATEGORY: Glucose Meter\n"
                     f"SUMMARY: An image of a digital glucose meter.\n"
@@ -707,7 +1135,7 @@ class GeminiService:
                 )
             }
 
-        elif classification == "food":
+        elif classification == "FOOD":
             meal = self.analyze_food_image(
                 image_data=image_data,
                 mime_type=mime_type,
@@ -723,7 +1151,6 @@ class GeminiService:
                 "recommendation_level": meal.get("recommendation_level"),
                 "recommendation": meal.get("recommendation_text"),
                 "raw_response": meal.get("raw_response"),
-                # Generic Memory Summary
                 "memory_summary": (
                     f"CATEGORY: Food\n"
                     f"SUMMARY: An image of a meal identified as {meal.get('meal_name')}.\n"
@@ -732,8 +1159,10 @@ class GeminiService:
             }
             
         else:
-            # STRICT REJECTION for non-medical images as requested
             return {
                 "type": "unknown", 
-                "message": "Could not analyze this image. Please upload a food image or glucose meter."
+                "message": (
+                    "I don't recognize this as a glucose reading or food. "
+                    "Please upload a photo of your meter or your meal so I can assist you."
+                )
             }
